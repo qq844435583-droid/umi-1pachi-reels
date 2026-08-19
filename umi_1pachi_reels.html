@@ -48,6 +48,10 @@
   .btn { width: 110px; height: 46px; border: none; border-radius: 24px; font-size: 15px; font-weight: 700; letter-spacing: 1px; cursor: pointer; }
   .btn.toggle { background: linear-gradient(180deg,#ffd479,#ff9f43); color: #5a2e00; box-shadow: 0 4px 12px rgba(255,159,67,.5); }
   .btn.demo { background: linear-gradient(180deg,#6bff9e,#2ecc71); color: #003b1a; box-shadow: 0 4px 12px rgba(46,204,113,.5); width: 130px; font-size: 13px; }
+  .btn.apply { background: rgba(27,79,114,.6); color: #bfe3ff; border: 1px solid #1b4f72; width: 70px; height: 38px; font-size: 13px; }
+  .prob-edit { margin-top: 10px; display: flex; align-items: center; gap: 8px; font-size: 14px; color: #bfe3ff; }
+  .prob-edit input { width: 80px; height: 38px; border: 1px solid #1b4f72; border-radius: 8px; background: rgba(2,16,25,.8); color: #ffd479; text-align: center; font-size: 15px; font-weight: 700; }
+  .prob-edit input:focus { outline: none; border-color: #ffd479; }
   .btn.reset { background: rgba(27,79,114,.6); color: #bfe3ff; border: 1px solid #1b4f72; }
   .btn:active { transform: translateY(2px); }
 
@@ -88,6 +92,12 @@
     <button class="btn reset" id="btnReset">リセット</button>
   </div>
 
+  <div class="prob-edit">
+    <span>大当たり確率 1 /</span>
+    <input type="number" id="probInput" value="99.9" step="0.1" min="1" max="10000">
+    <button class="btn apply" id="btnApply">適用</button>
+  </div>
+
   <div class="treasure">
     <h3>🏆 藏宝阁</h3>
     <div class="grid" id="grid"></div>
@@ -101,7 +111,11 @@ const SYMBOLS = ["🐟","🐚","⭐","🌊","🐠","💎","🫧","🐙"];
 const CELL = 83.33, VIS = 3, PAD = 12;
 const PROB = 1/99.9;
 let demoMode = false; // 演示模式：1/10 概率
-function currentProb(){ return demoMode ? 1/10 : PROB; }
+let userDenominator = 99.9; // 用户自定义概率分母
+function currentProb(){
+  if (demoMode) return 1/10;
+  return 1/userDenominator;
+}
 
 // 10种宝藏
 const TREASURES = [
@@ -181,8 +195,8 @@ function spinOnce(){
     reelsBox.className = "reels";
     info.className = "info"; info.textContent = "回転中…";
 
-    // 中奖判定：演示模式按 1/10，真实模式按三列自然全同（1/64 ≈ 1/99.9 近似）
-    const isWin = demoMode ? (Math.random() < 0.1) : false;
+    // 中奖判定：按当前概率（演示1/10 或 用户自定义 1/分母）
+    const isWin = (Math.random() < currentProb());
     let idx;
     if (isWin){
       const s = (Math.random()*SYMBOLS.length)|0;
@@ -279,19 +293,37 @@ function spinOnce(){
 function startAuto(){ auto = true; btnToggle.textContent = "停止"; if(!busy) spinOnce(); }
 function stopAuto(){ auto = false; btnToggle.textContent = "開始"; }
 btnToggle.addEventListener("click", ()=> auto ? stopAuto() : startAuto());
+function updateProbLabel(){
+  const p = document.getElementById("prob");
+  p.textContent = demoMode
+    ? "演示モード 大当たり確率 1/10"
+    : `大当たり確率 1/${userDenominator} ・ 1パチ ・ 自動転＋自然リーチ＋宝箱`;
+}
 document.getElementById("btnDemo").addEventListener("click", ()=>{
   demoMode = !demoMode;
   const b = document.getElementById("btnDemo");
   b.textContent = "当前演示:"+(demoMode?"ON":"OFF");
-  const p = document.getElementById("prob");
-  p.textContent = demoMode ? "演示モード 大当たり確率 1/10" : "大当たり確率 1/99.9 ・ 1パチ ・ 自動転＋自然リーチ＋宝箱";
+  updateProbLabel();
+});
+document.getElementById("btnApply").addEventListener("click", ()=>{
+  const v = parseFloat(document.getElementById("probInput").value);
+  if (!isNaN(v) && v >= 1 && v <= 10000){
+    userDenominator = v;
+    demoMode = false; // 自定义概率时退出演示模式
+    const b = document.getElementById("btnDemo");
+    b.textContent = "当前演示:OFF";
+    updateProbLabel();
+    info.textContent = `確率 1/${v} に変更`;
+  } else {
+    info.textContent = "1〜10000 の数字を入力";
+  }
 });
 document.getElementById("btnReset").addEventListener("click", ()=>{
   spins=0; hits=0; reachCount=0; owned = new Array(10).fill(0);
   buildGrid(); updateStat(); info.textContent="リセット済";
 });
 
-buildGrid(); updateStat(); startAuto();
+buildGrid(); updateStat(); updateProbLabel(); startAuto();
 </script>
 </body>
 </html>
