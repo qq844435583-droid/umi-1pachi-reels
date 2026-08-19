@@ -3,130 +3,59 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>海物語 1/99.9 図柄</title>
+<title>海物語 1/99.9 自動図柄</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
     height: 100%;
-    background: radial-gradient(circle at 50% 30%, #0a3d62 0%, #02233b 70%, #011019 100%);
+    background: radial-gradient(circle at 50% 25%, #0a3d62 0%, #02233b 70%, #011019 100%);
     font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
     color: #e8f4ff;
   }
-  .phone {
-    width: 100%;
-    max-width: 390px;
-    height: 100vh;
-    max-height: 844px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 16px;
-    position: relative;
-  }
-  .title {
-    font-size: 15px;
-    letter-spacing: 2px;
-    color: #7fdbff;
-    text-shadow: 0 0 8px #2e9fe0;
-    margin-bottom: 4px;
-  }
-  .prob {
-    font-size: 12px;
-    color: #ffd479;
-    margin-bottom: 14px;
-  }
-  /* 図柄リール */
-  .reels {
-    display: flex;
-    gap: 10px;
-    background: linear-gradient(180deg, #06121d, #0a1f30);
-    border: 3px solid #1b4f72;
-    border-radius: 16px;
-    padding: 14px 12px;
-    box-shadow: 0 0 24px rgba(46,159,224,.35), inset 0 0 18px rgba(0,0,0,.6);
-    position: relative;
-  }
-  .reel {
-    width: 84px;
-    height: 250px;
-    overflow: hidden;
-    border-radius: 10px;
-    background: linear-gradient(180deg, #021019, #04243a);
-    position: relative;
-    box-shadow: inset 0 12px 18px rgba(0,0,0,.7), inset 0 -12px 18px rgba(0,0,0,.7);
-  }
-  .strip {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    will-change: transform;
-  }
-  .cell {
-    height: 83.33px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 46px;
-    line-height: 1;
-  }
-  /* 中段ハイライト */
-  .reel::after {
-    content: "";
-    position: absolute;
-    top: 83.33px; left: 0; right: 0;
-    height: 83.33px;
-    border-top: 2px solid rgba(255,212,121,.5);
-    border-bottom: 2px solid rgba(255,212,121,.5);
-    background: rgba(255,212,121,.08);
-    pointer-events: none;
-  }
-  .win-glow { animation: glow .5s ease-in-out infinite alternate; }
-  @keyframes glow {
-    from { box-shadow: 0 0 24px rgba(46,159,224,.35), inset 0 0 18px rgba(0,0,0,.6); }
-    to   { box-shadow: 0 0 40px rgba(255,212,121,.9),  inset 0 0 18px rgba(0,0,0,.6); }
-  }
-  .info {
-    margin-top: 16px;
-    text-align: center;
-    font-size: 13px;
-    color: #bfe3ff;
-    min-height: 20px;
-  }
+  .phone { width: 100%; max-width: 390px; height: 100vh; max-height: 844px;
+    display: flex; flex-direction: column; align-items: center; padding: 16px; position: relative; }
+  .title { font-size: 15px; letter-spacing: 2px; color: #7fdbff; text-shadow: 0 0 8px #2e9fe0; margin-bottom: 2px; }
+  .prob { font-size: 12px; color: #ffd479; margin-bottom: 12px; }
+  .reels { display: flex; gap: 10px; background: linear-gradient(180deg, #06121d, #0a1f30);
+    border: 3px solid #1b4f72; border-radius: 16px; padding: 14px 12px;
+    box-shadow: 0 0 24px rgba(46,159,224,.35), inset 0 0 18px rgba(0,0,0,.6); position: relative; }
+  .reel { width: 84px; height: 250px; overflow: hidden; border-radius: 10px;
+    background: linear-gradient(180deg, #021019, #04243a); position: relative;
+    box-shadow: inset 0 12px 18px rgba(0,0,0,.7), inset 0 -12px 18px rgba(0,0,0,.7); }
+  .strip { position: absolute; top: 0; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; will-change: transform; }
+  .cell { height: 83.33px; display: flex; align-items: center; justify-content: center; font-size: 46px; line-height: 1; }
+  .reel::after { content: ""; position: absolute; top: 83.33px; left: 0; right: 0; height: 83.33px;
+    border-top: 2px solid rgba(255,212,121,.5); border-bottom: 2px solid rgba(255,212,121,.5);
+    background: rgba(255,212,121,.08); pointer-events: none; }
+  .win-glow { animation: glow .45s ease-in-out infinite alternate; }
+  @keyframes glow { from { box-shadow: 0 0 24px rgba(46,159,224,.35), inset 0 0 18px rgba(0,0,0,.6); }
+    to { box-shadow: 0 0 46px rgba(255,212,121,.95), inset 0 0 18px rgba(0,0,0,.6); } }
+
+  /* reach 统计面板 */
+  .reach { margin-top: 16px; width: 100%; max-width: 300px;
+    background: rgba(6,18,29,.7); border: 1px solid #1b4f72; border-radius: 12px; padding: 10px 14px; }
+  .reach h3 { font-size: 12px; color: #7fdbff; letter-spacing: 1px; margin-bottom: 8px; text-align: center; }
+  .reach .row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+  .reach .row span:last-child { color: #ffd479; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .reach .hit { color: #6bff9e !important; }
+
+  .info { margin-top: 12px; text-align: center; font-size: 13px; color: #bfe3ff; min-height: 20px; }
   .info b { color: #ffd479; }
-  .spin-btn {
-    margin-top: 18px;
-    width: 200px;
-    height: 54px;
-    border: none;
-    border-radius: 28px;
-    background: linear-gradient(180deg, #ffd479, #ff9f43);
-    color: #5a2e00;
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    box-shadow: 0 6px 16px rgba(255,159,67,.5);
-    cursor: pointer;
-  }
-  .spin-btn:active { transform: translateY(2px); }
-  .spin-btn:disabled { opacity: .5; }
-  .credit {
-    margin-top: auto;
-    font-size: 11px;
-    color: #4a7ba3;
-  }
+  .ctrl { margin-top: 14px; display: flex; gap: 10px; }
+  .btn { width: 110px; height: 46px; border: none; border-radius: 24px; font-size: 15px; font-weight: 700;
+    letter-spacing: 1px; cursor: pointer; }
+  .btn.toggle { background: linear-gradient(180deg,#ffd479,#ff9f43); color: #5a2e00; box-shadow: 0 4px 12px rgba(255,159,67,.5); }
+  .btn.reset { background: rgba(27,79,114,.6); color: #bfe3ff; border: 1px solid #1b4f72; }
+  .btn:active { transform: translateY(2px); }
+  .credit { margin-top: auto; font-size: 11px; color: #4a7ba3; }
 </style>
 </head>
 <body>
 <div class="phone">
   <div class="title">🌊 海物語 1/99.9</div>
-  <div class="prob">大当たり確率 1/99.9 ・ 1パチ</div>
+  <div class="prob">大当たり確率 1/99.9 ・ 1パチ ・ 自動転</div>
 
   <div class="reels" id="reels">
     <div class="reel"><div class="strip" id="s0"></div></div>
@@ -134,78 +63,100 @@
     <div class="reel"><div class="strip" id="s2"></div></div>
   </div>
 
-  <div class="info" id="info">タップして回す</div>
-  <button class="spin-btn" id="btn">回す</button>
+  <div class="reach">
+    <h3>REACH 統計</h3>
+    <div class="row"><span>転数 (spins)</span><span id="rSpin">0</span></div>
+    <div class="row"><span>大当たり (hits)</span><span id="rHit" class="hit">0</span></div>
+    <div class="row"><span>実測確率</span><span id="rRate">—</span></div>
+    <div class="row"><span>理論 1/99.9</span><span id="rTheory">0.100%</span></div>
+    <div class="row"><span>偏差</span><span id="rDev">—</span></div>
+  </div>
 
-  <div class="credit">umi-monogatari · demo layout</div>
+  <div class="info" id="info">自動転中…</div>
+  <div class="ctrl">
+    <button class="btn toggle" id="btnToggle">停止</button>
+    <button class="btn reset" id="btnReset">リセット</button>
+  </div>
+  <div class="credit">umi-monogatari · auto + reach demo</div>
 </div>
 
 <script>
 const SYMBOLS = ["🐟","🐚","⭐","🌊","🐠","💎","🫧","🐙"];
-const CELL = 83.33;          // px per cell (matches CSS)
-const VIS = 3;               // visible cells
-const PAD = 12;              // extra cells top/bottom padding in strip
-const HIT = Math.floor(Math.random()*SYMBOLS.length); // 当たり図柄
+const CELL = 83.33, VIS = 3, PAD = 12;
+const HIT = Math.floor(Math.random()*SYMBOLS.length);
+const PROB = 1/99.9;
+
+let spinning = false, busy = false, auto = true;
+let spins = 0, hits = 0;
+
+const strips = [document.getElementById("s0"),document.getElementById("s1"),document.getElementById("s2")];
+const reelsBox = document.getElementById("reels");
+const info = document.getElementById("info");
+const btnToggle = document.getElementById("btnToggle");
 
 function buildStrip(el, finalIdx){
-  // Build a long strip: random cells, then ensure finalIdx lands in middle row
-  const total = PAD*2 + 40; // long enough for spin
+  const total = PAD*2 + 40;
   const arr = [];
-  for (let i=0;i<total;i++) arr.push(SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)]);
-  // force the center-visible cell to finalIdx
-  arr[PAD + 1] = SYMBOLS[finalIdx]; // middle of 3 visible
+  for (let i=0;i<total;i++) arr.push(SYMBOLS[(Math.random()*SYMBOLS.length)|0]);
+  arr[PAD+1] = SYMBOLS[finalIdx];
   el.innerHTML = arr.map(s=>`<div class="cell">${s}</div>`).join("");
   return arr.length;
 }
 
-function spin(){
-  const btn = document.getElementById("btn");
-  const info = document.getElementById("info");
-  const reelsBox = document.getElementById("reels");
-  btn.disabled = true;
-  info.textContent = "回転中…";
-  reelsBox.classList.remove("win-glow");
+function updateReach(){
+  document.getElementById("rSpin").textContent = spins;
+  document.getElementById("rHit").textContent = hits;
+  if (spins>0){
+    const rate = hits/spins*100;
+    document.getElementById("rRate").textContent = rate.toFixed(3)+"%";
+    const dev = rate - PROB*100;
+    const d = document.getElementById("rDev");
+    d.textContent = (dev>=0?"+":"")+dev.toFixed(3)+"%";
+    d.style.color = dev>=0 ? "#6bff9e" : "#ff8a8a";
+  }
+}
 
-  // decide win/lose by 1/99.9
-  const isWin = Math.random() < (1/99.9);
-  const result = isWin ? HIT : (Math.random()*SYMBOLS.length)|0;
-
-  const strips = [document.getElementById("s0"),document.getElementById("s1"),document.getElementById("s2")];
-  const lens = strips.map((el,i)=> buildStrip(el, i===1 ? result : (isWin ? result : (Math.random()*SYMBOLS.length)|0)));
-
-  // if win: align all three to HIT; else only middle = result, others differ
-  const targets = isWin ? [HIT,HIT,HIT] : [ (Math.random()*SYMBOLS.length)|0, result, (Math.random()*SYMBOLS.length)|0 ];
+function spinOnce(){
+  if (busy) return;
+  busy = true;
+  const isWin = Math.random() < PROB;
+  const mid = isWin ? HIT : (Math.random()*SYMBOLS.length)|0;
+  const targets = isWin ? [HIT,HIT,HIT] : [(Math.random()*SYMBOLS.length)|0, mid, (Math.random()*SYMBOLS.length)|0];
+  const lens = strips.map((el,i)=> buildStrip(el, targets[i]));
 
   strips.forEach((el,i)=>{
-    const n = lens[i];
-    const stopCell = PAD + 1;                 // middle visible
-    const stopY = stopCell * CELL;
-    const full = (n - VIS) * CELL;            // end position
-    // set start
+    const full = (lens[i]-VIS)*CELL;
     el.style.transition = "none";
-    el.style.transform = `translateY(0px)`;
-    // force reflow
+    el.style.transform = "translateY(0px)";
     void el.offsetHeight;
-    // animate to stop position with overshoot feel via cubic-bezier
-    const dur = 2.2 + i*0.4;
+    const dur = 1.6 + i*0.35;
     el.style.transition = `transform ${dur}s cubic-bezier(.15,.85,.25,1)`;
-    // we want final symbol = targets[i] at middle; rebuild strip tail so last lands correctly
     el.style.transform = `translateY(-${full}px)`;
   });
 
-  setTimeout(()=>{
-    if (isWin){
-      info.innerHTML = "🎉 <b>大当たり！</b> 確率 1/99.9 的中";
-      reelsBox.classList.add("win-glow");
-    } else {
-      info.textContent = "ハズレ… また回そう";
-    }
-    btn.disabled = false;
-  }, 2400 + 800);
+  spins++;
+  if (isWin){ hits++; reelsBox.classList.add("win-glow"); info.innerHTML = "🎉 <b>大当たり！</b>"; }
+  else { reelsBox.classList.remove("win-glow"); info.textContent = "ハズレ"; }
+  updateReach();
+
+  setTimeout(()=>{ busy = false; if (auto) spinOnce(); }, 1700 + 350);
 }
-document.getElementById("btn").addEventListener("click", spin);
-// init strips
-[document.getElementById("s0"),document.getElementById("s1"),document.getElementById("s2")].forEach(el=>buildStrip(el,0));
+
+function startAuto(){ auto = true; btnToggle.textContent = "停止"; info.textContent = "自動転中…"; if(!busy) spinOnce(); }
+function stopAuto(){ auto = false; btnToggle.textContent = "開始"; }
+
+btnToggle.addEventListener("click", ()=> auto ? stopAuto() : startAuto());
+document.getElementById("btnReset").addEventListener("click", ()=>{
+  spins = 0; hits = 0; updateReach();
+  document.getElementById("rDev").textContent = "—";
+  document.getElementById("rDev").style.color = "#ffd479";
+  info.textContent = "リセット済";
+});
+
+// init
+strips.forEach(el=>buildStrip(el,0));
+updateReach();
+startAuto();
 </script>
 </body>
 </html>
