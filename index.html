@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>海物語 1/99.9 リーチ図柄</title>
+<title>海物語 1/99.9 リーチ図柄＋宝箱</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
     height: 100%;
-    background: radial-gradient(circle at 50% 25%, #0a3d62 0%, #02233b 70%, #011019 100%);
+    background: radial-gradient(circle at 50% 20%, #0a3d62 0%, #02233b 70%, #011019 100%);
     font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
-    overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    overflow-x: hidden; display: flex; flex-direction: column; align-items: center;
     color: #e8f4ff;
   }
-  .phone { width: 100%; max-width: 390px; height: 100vh; max-height: 844px;
-    display: flex; flex-direction: column; align-items: center; padding: 16px; position: relative; }
+  .phone { width: 100%; max-width: 430px; min-height: 100vh; padding: 14px; display: flex; flex-direction: column; align-items: center; }
   .title { font-size: 15px; letter-spacing: 2px; color: #7fdbff; text-shadow: 0 0 8px #2e9fe0; margin-bottom: 2px; }
-  .prob { font-size: 12px; color: #ffd479; margin-bottom: 12px; }
+  .prob { font-size: 12px; color: #ffd479; margin-bottom: 10px; }
+
   .reels { display: flex; gap: 10px; background: linear-gradient(180deg, #06121d, #0a1f30);
     border: 3px solid #1b4f72; border-radius: 16px; padding: 14px 12px;
     box-shadow: 0 0 24px rgba(46,159,224,.35), inset 0 0 18px rgba(0,0,0,.6); position: relative; }
@@ -28,55 +28,116 @@
   .reel::after { content: ""; position: absolute; top: 83.33px; left: 0; right: 0; height: 83.33px;
     border-top: 2px solid rgba(255,212,121,.5); border-bottom: 2px solid rgba(255,212,121,.5);
     background: rgba(255,212,121,.08); pointer-events: none; }
-  /* リーチ：中段橙色脉冲 + 轻微抖动 */
   .reels.reach .reel::after { border-color: #ff9f43; background: rgba(255,159,67,.18); box-shadow: 0 0 18px rgba(255,159,67,.6); }
   .reels.reach { animation: shake .12s linear infinite; }
   @keyframes shake { 0%{transform:translate(0,0)} 25%{transform:translate(-1.5px,1px)} 50%{transform:translate(1.5px,-1px)} 75%{transform:translate(-1px,-1px)} 100%{transform:translate(1px,1px)} }
-  /* 大当たり */
   .reels.win { animation: winglow .4s ease-in-out infinite alternate; }
   .reels.win .reel::after { border-color: #ffe28a; background: rgba(255,212,121,.3); }
   @keyframes winglow { from{box-shadow:0 0 30px rgba(255,212,121,.6)} to{box-shadow:0 0 60px rgba(255,212,121,1)} }
-  .info { margin-top: 14px; text-align: center; font-size: 15px; font-weight: 700; min-height: 22px; letter-spacing: 1px; }
+
+  .info { margin-top: 12px; text-align: center; font-size: 15px; font-weight: 700; min-height: 22px; letter-spacing: 1px; }
   .info.reach-txt { color: #ff9f43; text-shadow: 0 0 10px rgba(255,159,67,.7); }
   .info.win-txt { color: #ffe28a; text-shadow: 0 0 12px rgba(255,212,121,.9); }
   .info.miss-txt { color: #6f9fc0; }
-  .stat { margin-top: 12px; font-size: 12px; color: #bfe3ff; }
+  .info.drop-txt { color: #6bff9e; }
+
+  .stat { margin-top: 10px; font-size: 12px; color: #bfe3ff; text-align: center; }
   .stat b { color: #ffd479; }
-  .ctrl { margin-top: 14px; display: flex; gap: 10px; }
+
+  .ctrl { margin-top: 12px; display: flex; gap: 10px; }
   .btn { width: 110px; height: 46px; border: none; border-radius: 24px; font-size: 15px; font-weight: 700; letter-spacing: 1px; cursor: pointer; }
   .btn.toggle { background: linear-gradient(180deg,#ffd479,#ff9f43); color: #5a2e00; box-shadow: 0 4px 12px rgba(255,159,67,.5); }
   .btn.reset { background: rgba(27,79,114,.6); color: #bfe3ff; border: 1px solid #1b4f72; }
   .btn:active { transform: translateY(2px); }
-  .credit { margin-top: auto; font-size: 11px; color: #4a7ba3; }
+
+  /* 藏宝阁 */
+  .treasure { width: 100%; max-width: 390px; margin-top: 16px;
+    background: rgba(6,18,29,.7); border: 1px solid #1b4f72; border-radius: 14px; padding: 12px 14px 16px; }
+  .treasure h3 { font-size: 13px; color: #ffd479; letter-spacing: 2px; text-align: center; margin-bottom: 10px; text-shadow: 0 0 8px rgba(255,212,121,.5); }
+  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .item { aspect-ratio: 1; border-radius: 10px; background: rgba(2,16,25,.8); border: 1px solid #143a55;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .item .ico { font-size: 30px; line-height: 1; filter: grayscale(1) brightness(.35); opacity: .5; transition: .3s; }
+  .item.on .ico { filter: none; opacity: 1; text-shadow: 0 0 10px rgba(255,212,121,.8); animation: pop .4s ease; }
+  @keyframes pop { 0%{transform:scale(.4)} 60%{transform:scale(1.25)} 100%{transform:scale(1)} }
+  .item .nm { font-size: 9px; color: #8fb8d6; margin-top: 2px; text-align: center; }
+  .item.on .nm { color: #ffe28a; }
+  .item .cnt { position: absolute; top: 3px; right: 4px; font-size: 10px; font-weight: 700; color: #6bff9e; background: rgba(0,0,0,.5); border-radius: 8px; padding: 0 4px; }
+  .item .owned { position: absolute; bottom: 3px; font-size: 9px; color: #6bff9e; }
+  .credit { margin-top: 14px; font-size: 11px; color: #4a7ba3; text-align: center; }
 </style>
 </head>
 <body>
 <div class="phone">
   <div class="title">🌊 海物語 1/99.9</div>
-  <div class="prob">大当たり確率 1/99.9 ・ 1パチ ・ 自動転＋自然リーチ</div>
+  <div class="prob">大当たり確率 1/99.9 ・ 1パチ ・ 自動転＋自然リーチ＋宝箱</div>
+
   <div class="reels" id="reels">
     <div class="reel"><div class="strip" id="s0"></div></div>
     <div class="reel"><div class="strip" id="s1"></div></div>
     <div class="reel"><div class="strip" id="s2"></div></div>
   </div>
+
   <div class="info" id="info">準備中…</div>
   <div class="stat" id="stat">転数 <b>0</b> ・ 大当たり <b>0</b> ・ リーチ <b>0</b> ・ 実測 <b>—</b></div>
+
   <div class="ctrl">
     <button class="btn toggle" id="btnToggle">停止</button>
     <button class="btn reset" id="btnReset">リセット</button>
   </div>
-  <div class="credit">umi-monogatari · natural reach demo</div>
+
+  <div class="treasure">
+    <h3>🏆 藏宝阁</h3>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="credit">umi-monogatari · reach + treasure demo</div>
 </div>
+
 <script>
 const SYMBOLS = ["🐟","🐚","⭐","🌊","🐠","💎","🫧","🐙"];
 const CELL = 83.33, VIS = 3, PAD = 12;
 const PROB = 1/99.9;
+
+// 10种宝藏
+const TREASURES = [
+  {ico:"🪙", nm:"金貨"}, {ico:"🥈", nm:"銀塊"}, {ico:"💎", nm:"钻石"},
+  {ico:"💚", nm:"翡翠"}, {ico:"🔻", nm:"紅宝石"}, {ico:"🔷", nm:"藍宝石"},
+  {ico:"🫧", nm:"真珠"}, {ico:"👑", nm:"皇冠"}, {ico:"⛰️", nm:"金銀山"}, {ico:"🔮", nm:"伝説の珠"}
+];
+let owned = new Array(10).fill(0);
+
 let busy = false, auto = true, spins = 0, hits = 0, reachCount = 0;
 const strips = [document.getElementById("s0"),document.getElementById("s1"),document.getElementById("s2")];
 const reelsBox = document.getElementById("reels");
 const info = document.getElementById("info");
 const stat = document.getElementById("stat");
 const btnToggle = document.getElementById("btnToggle");
+const grid = document.getElementById("grid");
+
+function buildGrid(){
+  grid.innerHTML = TREASURES.map((t,i)=>`
+    <div class="item" id="item${i}">
+      <div class="ico">${t.ico}</div>
+      <div class="nm">${t.nm}</div>
+      <div class="cnt" style="display:none">x0</div>
+    </div>`).join("");
+}
+function refreshItem(i){
+  const el = document.getElementById("item"+i);
+  if (owned[i] > 0){
+    el.classList.add("on");
+    const cnt = el.querySelector(".cnt");
+    cnt.style.display = "block"; cnt.textContent = "x"+owned[i];
+  }
+}
+function grantTreasure(){
+  const i = (Math.random()*10)|0;   // 随机1种
+  owned[i]++;
+  refreshItem(i);
+  info.className = "info drop-txt";
+  info.innerHTML = `🎁 ${TREASURES[i].nm} ゲット！ (x${owned[i]})`;
+}
 
 function buildStrip(el, finalIdx){
   const total = PAD*2 + 44;
@@ -96,7 +157,8 @@ function setStrip(el, lens, dur, delay){
 }
 function updateStat(){
   const rate = spins>0 ? (hits/spins*100).toFixed(3)+"%" : "—";
-  stat.innerHTML = `転数 <b>${spins}</b> ・ 大当たり <b>${hits}</b> ・ リーチ <b>${reachCount}</b> ・ 実測 <b>${rate}</b>`;
+  const got = owned.filter(x=>x>0).length;
+  stat.innerHTML = `転数 <b>${spins}</b> ・ 大当たり <b>${hits}</b> ・ リーチ <b>${reachCount}</b> ・ 宝藏 <b>${got}/10</b> ・ 実測 <b>${rate}</b>`;
 }
 
 function spinOnce(){
@@ -104,45 +166,32 @@ function spinOnce(){
   busy = true;
   reelsBox.className = "reels";
   info.className = "info"; info.textContent = "回転中…";
-
-  // 三列それぞれ純ランダムで決定（强制的な揃えはしない）
-  const idx = [
-    (Math.random()*SYMBOLS.length)|0,
-    (Math.random()*SYMBOLS.length)|0,
-    (Math.random()*SYMBOLS.length)|0
-  ];
+  const idx = [(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0];
   const lens = strips.map((el,i)=> buildStrip(el, idx[i]));
-
-  // 第1・2列：通常速度で止める
   setStrip(strips[0], lens[0], 1.4, 0);
   setStrip(strips[1], lens[1], 1.7, 0);
 
-  // 第3列が止まる直前（1.6s後）に、第1=第2 か判定
   setTimeout(()=>{
     const twoSame = (idx[0] === idx[1]);
     if (twoSame && idx[2] !== idx[0]){
-      // 自然リーチ：2同+第3異。第3列をゆっくり止めて演出
       reelsBox.classList.add("reach");
-      info.className = "info reach-txt";
-      info.textContent = "リーチ！！";
+      info.className = "info reach-txt"; info.textContent = "リーチ！！";
       setStrip(strips[2], lens[2], 2.4, 0);
-      // 少し待ってから確定
       setTimeout(()=>{
         spins++; reachCount++;
-        if (idx[2] === idx[0]){ // この時点で揃った（実質大当たり）
-          hits++; reelsBox.className = "reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
+        if (idx[2] === idx[0]){
+          hits++; grantTreasure(); reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
         } else {
-          reelsBox.className = "reels"; info.className="info miss-txt"; info.textContent="ハズレ";
+          reelsBox.className="reels"; info.className="info miss-txt"; info.textContent="ハズレ";
         }
         updateStat(); busy=false; if(auto) spinOnce();
       }, 2400+120);
     } else {
-      // 非リーチ：第3列通常停止、すぐ確定
       setStrip(strips[2], lens[2], 1.9, 0);
       setTimeout(()=>{
         spins++;
-        if (idx[0]===idx[1] && idx[1]===idx[2]){ // 三列全同 = 大当たり（1/99.9 相当）
-          hits++; reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
+        if (idx[0]===idx[1] && idx[1]===idx[2]){
+          hits++; grantTreasure(); reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
         } else {
           reelsBox.className="reels"; info.className="info miss-txt"; info.textContent="ハズレ";
         }
@@ -156,11 +205,11 @@ function startAuto(){ auto = true; btnToggle.textContent = "停止"; if(!busy) s
 function stopAuto(){ auto = false; btnToggle.textContent = "開始"; }
 btnToggle.addEventListener("click", ()=> auto ? stopAuto() : startAuto());
 document.getElementById("btnReset").addEventListener("click", ()=>{
-  spins=0; hits=0; reachCount=0; updateStat(); info.textContent="リセット済";
+  spins=0; hits=0; reachCount=0; owned = new Array(10).fill(0);
+  buildGrid(); updateStat(); info.textContent="リセット済";
 });
-strips.forEach(el=>buildStrip(el,0));
-updateStat();
-startAuto();
+
+buildGrid(); updateStat(); startAuto();
 </script>
 </body>
 </html>
