@@ -35,6 +35,28 @@
   .reels.win .reel::after { border-color: #ffe28a; background: rgba(255,212,121,.3); }
   @keyframes winglow { from{box-shadow:0 0 30px rgba(255,212,121,.6)} to{box-shadow:0 0 60px rgba(255,212,121,1)} }
 
+  /* 大当たり：画面全体が最も強く震える */
+  body.win-shake { animation: bigshake .08s linear infinite; }
+  @keyframes bigshake {
+    0%{transform:translate(0,0)} 20%{transform:translate(-6px,5px)} 40%{transform:translate(6px,-5px)}
+    60%{transform:translate(-5px,-4px)} 80%{transform:translate(5px,4px)} 100%{transform:translate(-2px,2px)}
+  }
+
+  /* 中奖弹窗 */
+  .modal-mask { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    z-index: 999; align-items: center; justify-content: center; }
+  .modal-mask.show { display: flex; }
+  .modal { background: linear-gradient(180deg,#1b4f72,#0a2a44); border: 2px solid #ffd479;
+    border-radius: 18px; padding: 24px 28px; text-align: center; max-width: 300px; width: 80%;
+    box-shadow: 0 0 40px rgba(255,212,121,.8); animation: modalin .3s ease; }
+  @keyframes modalin { from{transform:scale(.6);opacity:0} to{transform:scale(1);opacity:1} }
+  .modal .m-title { font-size: 20px; color: #ffe28a; font-weight: 700; letter-spacing: 2px; margin-bottom: 10px; text-shadow: 0 0 12px rgba(255,212,121,.9); }
+  .modal .m-ico { font-size: 64px; display: block; margin: 10px auto; animation: pop .5s ease; }
+  .modal .m-name { font-size: 18px; color: #e8f4ff; font-weight: 700; margin-bottom: 4px; }
+  .modal .m-cnt { font-size: 13px; color: #6bff9e; margin-bottom: 16px; }
+  .modal .m-btn { width: 140px; height: 44px; border: none; border-radius: 22px;
+    background: linear-gradient(180deg,#ffd479,#ff9f43); color: #5a2e00; font-size: 15px; font-weight: 700; cursor: pointer; }
+
   .info { margin-top: 12px; text-align: center; font-size: 15px; font-weight: 700; min-height: 22px; letter-spacing: 1px; }
   .info.reach-txt { color: #ff9f43; text-shadow: 0 0 10px rgba(255,159,67,.7); }
   .info.win-txt { color: #ffe28a; text-shadow: 0 0 12px rgba(255,212,121,.9); }
@@ -70,6 +92,23 @@
   .item .cnt { position: absolute; top: 3px; right: 4px; font-size: 10px; font-weight: 700; color: #6bff9e; background: rgba(0,0,0,.5); border-radius: 8px; padding: 0 4px; }
   .item .owned { position: absolute; bottom: 3px; font-size: 9px; color: #6bff9e; }
   .credit { margin-top: 14px; font-size: 11px; color: #4a7ba3; text-align: center; }
+
+  /* 神龙图鉴 */
+  .dragon-panel { width: 100%; max-width: 390px; margin-top: 14px;
+    background: rgba(6,18,29,.7); border: 1px solid #1b4f72; border-radius: 14px; padding: 12px 14px 16px; }
+  .dragon-panel h3 { font-size: 13px; color: #7fdbff; letter-spacing: 2px; text-align: center; margin-bottom: 10px; text-shadow: 0 0 8px rgba(127,219,255,.5); }
+  .dragon-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .dragon { aspect-ratio: 1; border-radius: 10px; background: rgba(2,16,25,.8); border: 1px solid #143a55;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+  .dragon .d-ico { font-size: 34px; line-height: 1; filter: grayscale(1) brightness(.35); opacity: .5; transition: .3s; }
+  .dragon.on .d-ico { filter: none; opacity: 1; text-shadow: 0 0 14px rgba(127,219,255,.9); animation: pop .5s ease; }
+  .dragon .d-nm { font-size: 9px; color: #8fb8d6; margin-top: 2px; }
+  .dragon.on .d-nm { color: #7fdbff; }
+
+  /* 召唤神龙弹窗 */
+  .dragon-ico { font-size: 80px; animation: dragonfly 1s ease-in-out infinite alternate; }
+  @keyframes dragonfly { from{transform:translateY(0) scale(1)} to{transform:translateY(-12px) scale(1.1)} }
+  .dragon-modal { border-color: #7fdbff !important; box-shadow: 0 0 60px rgba(127,219,255,.9) !important; }
 </style>
 </head>
 <body>
@@ -102,7 +141,34 @@
     <div class="grid" id="grid"></div>
   </div>
 
-  <div class="credit">umi-monogatari · reach + treasure demo</div>
+  <div class="dragon-panel">
+    <h3>🐉 神龙图鉴</h3>
+    <div class="dragon-grid" id="dragonGrid"></div>
+  </div>
+
+  <div class="credit">umi-monogatari · reach + treasure + dragon demo</div>
+</div>
+
+<!-- 中奖弹窗 -->
+<div class="modal-mask" id="winModal">
+  <div class="modal">
+    <div class="m-title">🎉 大当たり！</div>
+    <span class="m-ico" id="mIco">💎</span>
+    <div class="m-name" id="mName">钻石</div>
+    <div class="m-cnt" id="mCnt">獲得 x1</div>
+    <button class="m-btn" id="mBtn">続ける</button>
+  </div>
+</div>
+
+<!-- 召唤神龙弹窗 -->
+<div class="modal-mask" id="dragonModal">
+  <div class="modal dragon-modal">
+    <div class="m-title">✨ 神龙召唤！</div>
+    <span class="m-ico dragon-ico" id="dIco">🐉</span>
+    <div class="m-name" id="dName">青龙</div>
+    <div class="m-cnt" id="dCnt">道具全收集！召唤神龙！</div>
+    <button class="m-btn" id="dBtn">受け取る</button>
+  </div>
 </div>
 
 <script>
@@ -119,6 +185,14 @@ const TREASURES = [
   {ico:"🫧", nm:"真珠"}, {ico:"👑", nm:"皇冠"}, {ico:"⛰️", nm:"金銀山"}, {ico:"🔮", nm:"伝説の珠"}
 ];
 let owned = new Array(10).fill(0);
+
+// 5种神龙
+const DRAGONS = [
+  {ico:"🐲", nm:"青龙"}, {ico:"🐉", nm:"赤龙"}, {ico:"🟦", nm:"蓝龙"},
+  {ico:"⚡", nm:"雷龙"}, {ico:"🌟", nm:"金龙"}
+];
+let dragonLit = new Array(5).fill(false); // 神龙点亮状态
+let dragonSummoned = false; // 是否已召唤过神龙
 
 let busy = false, auto = true, spins = 0, hits = 0, reachCount = 0;
 const strips = [document.getElementById("s0"),document.getElementById("s1"),document.getElementById("s2")];
@@ -145,12 +219,62 @@ function refreshItem(i){
     cnt.style.display = "block"; cnt.textContent = "x"+owned[i];
   }
 }
+function buildDragonGrid(){
+  const g = document.getElementById("dragonGrid");
+  g.innerHTML = DRAGONS.map((d,i)=>`
+    <div class="dragon" id="dragon${i}">
+      <div class="d-ico">${d.ico}</div>
+      <div class="d-nm">${d.nm}</div>
+    </div>`).join("");
+}
+function refreshDragon(i){
+  const el = document.getElementById("dragon"+i);
+  if (dragonLit[i]){
+    el.classList.add("on");
+  }
+}
+function lightDragon(){
+  // 每次大当たり必点亮一种神龙（优先未点亮的）
+  const unlit = dragonLit.map((v,i)=>v? -1 : i).filter(i=>i>=0);
+  let idx;
+  if (unlit.length > 0){
+    idx = unlit[(Math.random()*unlit.length)|0];
+  } else {
+    idx = (Math.random()*5)|0; // 全点亮后随机重复
+  }
+  dragonLit[idx] = true;
+  refreshDragon(idx);
+  return idx;
+}
+function checkAllTreasures(){
+  return owned.every(x=>x>0);
+}
+function showDragonModal(idx){
+  // 神龙召唤弹窗（道具全收集惊喜）
+  document.body.classList.add("win-shake");
+  auto = false;
+  document.getElementById("btnToggle").textContent = "開始";
+  document.getElementById("dIco").textContent = DRAGONS[idx].ico;
+  document.getElementById("dName").textContent = DRAGONS[idx].nm;
+  document.getElementById("dCnt").textContent = dragonSummoned ? "神龙已觉醒！" : "道具全收集！召唤神龙！";
+  document.getElementById("dragonModal").classList.add("show");
+}
 function grantTreasure(){
   const i = (Math.random()*10)|0;   // 随机1种
   owned[i]++;
   refreshItem(i);
-  info.className = "info drop-txt";
-  info.innerHTML = `🎁 ${TREASURES[i].nm} ゲット！ (x${owned[i]})`;
+  return i; // 返回掉落道具索引
+}
+function showWinModal(i){
+  // 屏幕最强震动 + 暂停 + 弹窗
+  document.body.classList.add("win-shake");
+  auto = false;
+  const b = document.getElementById("btnToggle");
+  b.textContent = "開始";
+  document.getElementById("mIco").textContent = TREASURES[i].ico;
+  document.getElementById("mName").textContent = TREASURES[i].nm;
+  document.getElementById("mCnt").textContent = `獲得 x${owned[i]}`;
+  document.getElementById("winModal").classList.add("show");
 }
 
 function buildStrip(el, finalIdx){
@@ -249,12 +373,24 @@ function spinOnce(){
               const fB = getCenter(strips[1]);
               const fC = getCenter(strips[2]);
               if (fA===fB && fB===fC){
-                hits++; grantTreasure();
+                hits++;
+                const ti = grantTreasure();
                 reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
+                updateStat();
+                // 每次大当たり必点亮一种神龙
+                const di = lightDragon();
+                // 道具全收集 → 召唤神龙惊喜（首次）
+                if (checkAllTreasures() && !dragonSummoned){
+                  dragonSummoned = true;
+                  showDragonModal(di);
+                } else {
+                  showWinModal(ti);   // 震动+暂停+弹窗（中奖后不自动继续）
+                }
               } else {
                 reelsBox.className="reels"; info.className="info miss-txt"; info.textContent="ハズレ";
+                updateStat();
+                busy=false; if(auto) spinOnce();
               }
-              updateStat();
             } finally { busy=false; if(auto) spinOnce(); }
           }, 4700);
         } else {
@@ -266,12 +402,24 @@ function spinOnce(){
               const fB = getCenter(strips[1]);
               const fC = getCenter(strips[2]);
               if (fA===fB && fB===fC){
-                hits++; grantTreasure();
+                hits++;
+                const ti = grantTreasure();
                 reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
+                updateStat();
+                // 每次大当たり必点亮一种神龙
+                const di = lightDragon();
+                // 道具全收集 → 召唤神龙惊喜（首次）
+                if (checkAllTreasures() && !dragonSummoned){
+                  dragonSummoned = true;
+                  showDragonModal(di);
+                } else {
+                  showWinModal(ti);   // 震动+暂停+弹窗（中奖后不自动继续）
+                }
               } else {
                 reelsBox.className="reels"; info.className="info miss-txt"; info.textContent="ハズレ";
+                updateStat();
+                busy=false; if(auto) spinOnce();
               }
-              updateStat();
             } finally { busy=false; if(auto) spinOnce(); }
           }, 1200);
         }
@@ -305,10 +453,23 @@ document.getElementById("btnApply").addEventListener("click", ()=>{
 });
 document.getElementById("btnReset").addEventListener("click", ()=>{
   spins=0; hits=0; reachCount=0; owned = new Array(10).fill(0);
-  buildGrid(); updateStat(); info.textContent="リセット済";
+  dragonLit = new Array(5).fill(false); dragonSummoned = false;
+  buildGrid(); buildDragonGrid(); updateStat(); info.textContent="リセット済";
+});
+// 弹窗"続ける"：关闭弹窗、停止震动、自动恢复游戏
+document.getElementById("mBtn").addEventListener("click", ()=>{
+  document.getElementById("winModal").classList.remove("show");
+  document.body.classList.remove("win-shake");
+  startAuto();  // 自动继续
+});
+// 神龙弹窗"受け取る"：关闭、停止震动、恢复游戏
+document.getElementById("dBtn").addEventListener("click", ()=>{
+  document.getElementById("dragonModal").classList.remove("show");
+  document.body.classList.remove("win-shake");
+  startAuto();
 });
 
-buildGrid(); updateStat(); updateProbLabel(); startAuto();
+buildGrid(); buildDragonGrid(); updateStat(); updateProbLabel(); startAuto();
 </script>
 </body>
 </html>
