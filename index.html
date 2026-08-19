@@ -29,8 +29,8 @@
     border-top: 2px solid rgba(255,212,121,.5); border-bottom: 2px solid rgba(255,212,121,.5);
     background: rgba(255,212,121,.08); pointer-events: none; }
   .reels.reach .reel::after { border-color: #ff9f43; background: rgba(255,159,67,.18); box-shadow: 0 0 18px rgba(255,159,67,.6); }
-  .reels.reach { animation: shake .12s linear infinite; }
-  @keyframes shake { 0%{transform:translate(0,0)} 25%{transform:translate(-1.5px,1px)} 50%{transform:translate(1.5px,-1px)} 75%{transform:translate(-1px,-1px)} 100%{transform:translate(1px,1px)} }
+  .reels.reach { animation: reachshake .1s linear infinite; box-shadow: 0 0 30px rgba(255,159,67,.7), inset 0 0 18px rgba(0,0,0,.6); }
+  @keyframes reachshake { 0%{transform:translate(0,0)} 25%{transform:translate(-3px,2px)} 50%{transform:translate(3px,-2px)} 75%{transform:translate(-2px,-2px)} 100%{transform:translate(2px,2px)} }
   .reels.win { animation: winglow .4s ease-in-out infinite alternate; }
   .reels.win .reel::after { border-color: #ffe28a; background: rgba(255,212,121,.3); }
   @keyframes winglow { from{box-shadow:0 0 30px rgba(255,212,121,.6)} to{box-shadow:0 0 60px rgba(255,212,121,1)} }
@@ -152,12 +152,15 @@ function buildStrip(el, finalIdx){
   return arr.length;
 }
 function setStrip(el, lens, dur){
-  const full = (lens-VIS)*CELL;
+  // strip が縦に並ぶ。中段（表示窓の2番目）に arr[PAD+1] が来るよう、
+  // 開始位置 = strip 末尾付近（= 大きく回って見える）、停止位置 = -PAD*CELL
+  const stopY = -(PAD)*CELL;                    // 中段 = arr[PAD+1]
+  const startY = -((lens - VIS - 1) * CELL);    // strip の一番下から（何周も回って見える）
   el.style.transition = "none";
-  el.style.transform = "translateY(0px)";
+  el.style.transform = `translateY(${startY}px)`;   // まず末尾へ
   void el.offsetHeight;
   el.style.transition = `transform ${dur}s cubic-bezier(.12,.8,.25,1)`;
-  el.style.transform = `translateY(-${full}px)`;
+  el.style.transform = `translateY(${stopY}px)`;    // 目標位置へ滑る
 }
 function getCenter(el){
   // 中段（可见3格的中间格）的図柄を読む
@@ -184,7 +187,14 @@ function spinOnce(){
       const s = (Math.random()*SYMBOLS.length)|0;
       idx = [s,s,s]; // 强制三同 → 中奖
     } else {
-      idx = [(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0];
+      // 非中奖时：30% 概率制造"两同+第三异"（リーチ演出），让用户能看到动画
+      if (Math.random() < 0.3){
+        const s = (Math.random()*SYMBOLS.length)|0;
+        let t; do { t = (Math.random()*SYMBOLS.length)|0; } while (t === s);
+        idx = [s, s, t]; // リーチ
+      } else {
+        idx = [(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0];
+      }
     }
     const lens = strips.map((el,i)=> buildStrip(el, idx[i]));
 
