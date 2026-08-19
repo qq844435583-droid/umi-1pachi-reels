@@ -147,13 +147,18 @@ function buildStrip(el, finalIdx){
   el.innerHTML = arr.map(s=>`<div class="cell">${s}</div>`).join("");
   return arr.length;
 }
-function setStrip(el, lens, dur, delay){
+function setStrip(el, lens, dur){
   const full = (lens-VIS)*CELL;
   el.style.transition = "none";
   el.style.transform = "translateY(0px)";
   void el.offsetHeight;
-  el.style.transition = `transform ${dur}s cubic-bezier(.12,.8,.25,1) ${delay}s`;
+  el.style.transition = `transform ${dur}s cubic-bezier(.12,.8,.25,1)`;
   el.style.transform = `translateY(-${full}px)`;
+}
+function getCenter(el){
+  // 中段（可见3格的中间格）的図柄を読む
+  const cells = el.querySelectorAll(".cell");
+  return cells.length ? cells[PAD+1].textContent : "";
 }
 function updateStat(){
   const rate = spins>0 ? (hits/spins*100).toFixed(3)+"%" : "—";
@@ -166,39 +171,51 @@ function spinOnce(){
   busy = true;
   reelsBox.className = "reels";
   info.className = "info"; info.textContent = "回転中…";
+
   const idx = [(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0];
   const lens = strips.map((el,i)=> buildStrip(el, idx[i]));
-  setStrip(strips[0], lens[0], 1.4, 0);
-  setStrip(strips[1], lens[1], 1.7, 0);
+
+  // 第1・2列：通常速度
+  setStrip(strips[0], lens[0], 1.4);
+  setStrip(strips[1], lens[1], 1.7);
+
+  // 第3列：先通常転、1.6s 後中段を読んで判定
+  setStrip(strips[2], lens[2], 1.6);
 
   setTimeout(()=>{
-    const twoSame = (idx[0] === idx[1]);
-    if (twoSame && idx[2] !== idx[0]){
+    const c0 = getCenter(strips[0]);
+    const c1 = getCenter(strips[1]);
+    const c2 = getCenter(strips[2]);
+    const twoSame = (c0 === c1);
+
+    if (twoSame && c2 !== c0){
+      // 自然リーチ：2同+第3異。第3列をゆっくり再転→止める
       reelsBox.classList.add("reach");
       info.className = "info reach-txt"; info.textContent = "リーチ！！";
-      setStrip(strips[2], lens[2], 2.4, 0);
+      // 再構築して同じ c0/c1 を維持、c2 はそのまま（異なる）でゆっくり停止
+      const l2 = buildStrip(strips[2], SYMBOLS.indexOf(c2));
+      setStrip(strips[2], l2, 2.2);
       setTimeout(()=>{
         spins++; reachCount++;
-        if (idx[2] === idx[0]){
+        const cc2 = getCenter(strips[2]);
+        if (cc2 === c0){
           hits++; grantTreasure(); reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
         } else {
           reelsBox.className="reels"; info.className="info miss-txt"; info.textContent="ハズレ";
         }
         updateStat(); busy=false; if(auto) spinOnce();
-      }, 2400+120);
+      }, 2200+100);
     } else {
-      setStrip(strips[2], lens[2], 1.9, 0);
-      setTimeout(()=>{
-        spins++;
-        if (idx[0]===idx[1] && idx[1]===idx[2]){
-          hits++; grantTreasure(); reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
-        } else {
-          reelsBox.className="reels"; info.className="info miss-txt"; info.textContent="ハズレ";
-        }
-        updateStat(); busy=false; if(auto) spinOnce();
-      }, 1900+150);
+      // 非リーチ：すでに第3列止まってる → 確定
+      spins++;
+      if (c0===c1 && c1===c2){
+        hits++; grantTreasure(); reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
+      } else {
+        reelsBox.className="reels"; info.className="info miss-txt"; info.textContent="ハズレ";
+      }
+      updateStat(); busy=false; if(auto) spinOnce();
     }
-  }, 1600);
+  }, 1650);
 }
 
 function startAuto(){ auto = true; btnToggle.textContent = "停止"; if(!busy) spinOnce(); }
