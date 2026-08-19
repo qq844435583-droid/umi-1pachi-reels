@@ -197,8 +197,8 @@ function spinOnce(){
       const s = (Math.random()*SYMBOLS.length)|0;
       idx = [s,s,s]; // 强制三同 → 中奖
     } else {
-      // 非中奖时：50% 概率制造"两同+第三异"（リーチ演出）→ リーチ/非リーチ 五五开
-      if (Math.random() < 0.5){
+      // 非中奖时：20% 概率制造"两同+第三异"（リーチ演出）→ 总リーチ率≈20%
+      if (Math.random() < 0.2){
         const s = (Math.random()*SYMBOLS.length)|0;
         let t; do { t = (Math.random()*SYMBOLS.length)|0; } while (t === s);
         idx = [s, s, t]; // リーチ
