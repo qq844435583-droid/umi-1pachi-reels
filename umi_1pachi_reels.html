@@ -197,13 +197,17 @@ function spinOnce(){
       const s = (Math.random()*SYMBOLS.length)|0;
       idx = [s,s,s]; // 强制三同 → 中奖
     } else {
-      // 非中奖时：30% 概率制造"两同+第三异"（リーチ演出），让用户能看到动画
-      if (Math.random() < 0.3){
+      // 非中奖时：50% 概率制造"两同+第三异"（リーチ演出）→ リーチ/非リーチ 五五开
+      if (Math.random() < 0.5){
         const s = (Math.random()*SYMBOLS.length)|0;
         let t; do { t = (Math.random()*SYMBOLS.length)|0; } while (t === s);
         idx = [s, s, t]; // リーチ
       } else {
-        idx = [(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0];
+        // 非リーチ：三列全バラ（前2列が揃わないよう排除）→ 精确不触发自然リーチ
+        let a, b, c;
+        do { a = (Math.random()*SYMBOLS.length)|0; b = (Math.random()*SYMBOLS.length)|0; } while (a === b);
+        c = (Math.random()*SYMBOLS.length)|0;
+        idx = [a, b, c];
       }
     }
     const lens = strips.map((el,i)=> buildStrip(el, idx[i]));
@@ -214,15 +218,12 @@ function spinOnce(){
     // 第3列：まず3sで止まる予定（前2列が止まった後も回り続ける）
     setStrip(strips[2], lens[2], 3);
 
-    // 1.8s 時点：前2列は停止済み（1.4s/1.7s）。実際の表示を読んで判定（idx ではなく DOM）
+    // 1.8s 時点：前2列は停止済み（1.4s/1.7s）。idx（最終目標）で判定
     setTimeout(()=>{
       try {
         const [a,b,c] = idx;
-        const actualA = getCenter(strips[0]);
-        const actualB = getCenter(strips[1]);
-        const actualC = getCenter(strips[2]);
-        const twoSame = (actualA === actualB);
-        if (twoSame && actualC !== actualA){
+        const twoSame = (a === b);
+        if (twoSame && c !== a){
           // ★ 自然リーチ：画面で前2列が実際に同じ
           reelsBox.classList.add("reach");
           info.className = "info reach-txt"; info.textContent = "リーチ！！";
