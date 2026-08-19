@@ -47,6 +47,7 @@
   .ctrl { margin-top: 12px; display: flex; gap: 10px; }
   .btn { width: 110px; height: 46px; border: none; border-radius: 24px; font-size: 15px; font-weight: 700; letter-spacing: 1px; cursor: pointer; }
   .btn.toggle { background: linear-gradient(180deg,#ffd479,#ff9f43); color: #5a2e00; box-shadow: 0 4px 12px rgba(255,159,67,.5); }
+  .btn.demo { background: linear-gradient(180deg,#6bff9e,#2ecc71); color: #003b1a; box-shadow: 0 4px 12px rgba(46,204,113,.5); width: 100px; }
   .btn.reset { background: rgba(27,79,114,.6); color: #bfe3ff; border: 1px solid #1b4f72; }
   .btn:active { transform: translateY(2px); }
 
@@ -70,7 +71,7 @@
 <body>
 <div class="phone">
   <div class="title">🌊 海物語 1/99.9</div>
-  <div class="prob">大当たり確率 1/99.9 ・ 1パチ ・ 自動転＋自然リーチ＋宝箱</div>
+  <div class="prob" id="prob">大当たり確率 1/99.9 ・ 1パチ ・ 自動転＋自然リーチ＋宝箱</div>
 
   <div class="reels" id="reels">
     <div class="reel"><div class="strip" id="s0"></div></div>
@@ -83,6 +84,7 @@
 
   <div class="ctrl">
     <button class="btn toggle" id="btnToggle">停止</button>
+    <button class="btn demo" id="btnDemo">演示:OFF</button>
     <button class="btn reset" id="btnReset">リセット</button>
   </div>
 
@@ -98,6 +100,8 @@
 const SYMBOLS = ["🐟","🐚","⭐","🌊","🐠","💎","🫧","🐙"];
 const CELL = 83.33, VIS = 3, PAD = 12;
 const PROB = 1/99.9;
+let demoMode = false; // 演示模式：1/10 概率
+function currentProb(){ return demoMode ? 1/10 : PROB; }
 
 // 10种宝藏
 const TREASURES = [
@@ -173,7 +177,15 @@ function spinOnce(){
     reelsBox.className = "reels";
     info.className = "info"; info.textContent = "回転中…";
 
-    const idx = [(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0];
+    // 中奖判定：演示模式按 1/10，真实模式按三列自然全同（1/64 ≈ 1/99.9 近似）
+    const isWin = demoMode ? (Math.random() < 0.1) : false;
+    let idx;
+    if (isWin){
+      const s = (Math.random()*SYMBOLS.length)|0;
+      idx = [s,s,s]; // 强制三同 → 中奖
+    } else {
+      idx = [(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0];
+    }
     const lens = strips.map((el,i)=> buildStrip(el, idx[i]));
 
     // 第1・2列：通常速度で先に止める（1.4s / 1.7s）
@@ -220,6 +232,13 @@ function spinOnce(){
 function startAuto(){ auto = true; btnToggle.textContent = "停止"; if(!busy) spinOnce(); }
 function stopAuto(){ auto = false; btnToggle.textContent = "開始"; }
 btnToggle.addEventListener("click", ()=> auto ? stopAuto() : startAuto());
+document.getElementById("btnDemo").addEventListener("click", ()=>{
+  demoMode = !demoMode;
+  const b = document.getElementById("btnDemo");
+  b.textContent = "演示:"+(demoMode?"ON":"OFF");
+  const p = document.getElementById("prob");
+  p.textContent = demoMode ? "演示モード 大当たり確率 1/10" : "大当たり確率 1/99.9 ・ 1パチ ・ 自動転＋自然リーチ＋宝箱";
+});
 document.getElementById("btnReset").addEventListener("click", ()=>{
   spins=0; hits=0; reachCount=0; owned = new Array(10).fill(0);
   buildGrid(); updateStat(); info.textContent="リセット済";
