@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>海物語 1/99.9 自動図柄</title>
+<title>海物語 1/99.9 リーチ図柄</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
     height: 100%;
     background: radial-gradient(circle at 50% 25%, #0a3d62 0%, #02233b 70%, #011019 100%);
     font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
-    overflow: hidden;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center;
     color: #e8f4ff;
   }
   .phone { width: 100%; max-width: 390px; height: 100vh; max-height: 844px;
     display: flex; flex-direction: column; align-items: center; padding: 16px; position: relative; }
   .title { font-size: 15px; letter-spacing: 2px; color: #7fdbff; text-shadow: 0 0 8px #2e9fe0; margin-bottom: 2px; }
   .prob { font-size: 12px; color: #ffd479; margin-bottom: 12px; }
+
   .reels { display: flex; gap: 10px; background: linear-gradient(180deg, #06121d, #0a1f30);
     border: 3px solid #1b4f72; border-radius: 16px; padding: 14px 12px;
     box-shadow: 0 0 24px rgba(46,159,224,.35), inset 0 0 18px rgba(0,0,0,.6); position: relative; }
@@ -29,23 +29,29 @@
   .reel::after { content: ""; position: absolute; top: 83.33px; left: 0; right: 0; height: 83.33px;
     border-top: 2px solid rgba(255,212,121,.5); border-bottom: 2px solid rgba(255,212,121,.5);
     background: rgba(255,212,121,.08); pointer-events: none; }
-  .win-glow { animation: glow .45s ease-in-out infinite alternate; }
-  @keyframes glow { from { box-shadow: 0 0 24px rgba(46,159,224,.35), inset 0 0 18px rgba(0,0,0,.6); }
-    to { box-shadow: 0 0 46px rgba(255,212,121,.95), inset 0 0 18px rgba(0,0,0,.6); } }
 
-  /* reach 统计面板 */
-  .reach { margin-top: 16px; width: 100%; max-width: 300px;
-    background: rgba(6,18,29,.7); border: 1px solid #1b4f72; border-radius: 12px; padding: 10px 14px; }
-  .reach h3 { font-size: 12px; color: #7fdbff; letter-spacing: 1px; margin-bottom: 8px; text-align: center; }
-  .reach .row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
-  .reach .row span:last-child { color: #ffd479; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .reach .hit { color: #6bff9e !important; }
+  /* リーチ状態：中段図柄を橙色に光らせる */
+  .reels.reach .reel::after { border-color: #ff9f43; background: rgba(255,159,67,.18);
+    box-shadow: 0 0 18px rgba(255,159,67,.6); }
+  .reels.reach { animation: shake .12s linear infinite; }
+  @keyframes shake { 0%{transform:translate(0,0)} 25%{transform:translate(-1.5px,1px)} 50%{transform:translate(1.5px,-1px)} 75%{transform:translate(-1px,-1px)} 100%{transform:translate(1px,1px)} }
 
-  .info { margin-top: 12px; text-align: center; font-size: 13px; color: #bfe3ff; min-height: 20px; }
-  .info b { color: #ffd479; }
+  /* 大当たり */
+  .reels.win { animation: none; box-shadow: 0 0 50px rgba(255,212,121,.95), inset 0 0 18px rgba(0,0,0,.6); }
+  .reels.win .reel::after { border-color: #ffe28a; background: rgba(255,212,121,.3); }
+  @keyframes winglow { from{box-shadow:0 0 30px rgba(255,212,121,.6)} to{box-shadow:0 0 60px rgba(255,212,121,1)} }
+  .reels.win { animation: winglow .4s ease-in-out infinite alternate; }
+
+  .info { margin-top: 14px; text-align: center; font-size: 15px; font-weight: 700; min-height: 22px; letter-spacing: 1px; }
+  .info.reach-txt { color: #ff9f43; text-shadow: 0 0 10px rgba(255,159,67,.7); }
+  .info.win-txt { color: #ffe28a; text-shadow: 0 0 12px rgba(255,212,121,.9); }
+  .info.miss-txt { color: #6f9fc0; }
+
+  .stat { margin-top: 12px; font-size: 12px; color: #bfe3ff; }
+  .stat b { color: #ffd479; }
+
   .ctrl { margin-top: 14px; display: flex; gap: 10px; }
-  .btn { width: 110px; height: 46px; border: none; border-radius: 24px; font-size: 15px; font-weight: 700;
-    letter-spacing: 1px; cursor: pointer; }
+  .btn { width: 110px; height: 46px; border: none; border-radius: 24px; font-size: 15px; font-weight: 700; letter-spacing: 1px; cursor: pointer; }
   .btn.toggle { background: linear-gradient(180deg,#ffd479,#ff9f43); color: #5a2e00; box-shadow: 0 4px 12px rgba(255,159,67,.5); }
   .btn.reset { background: rgba(27,79,114,.6); color: #bfe3ff; border: 1px solid #1b4f72; }
   .btn:active { transform: translateY(2px); }
@@ -55,7 +61,7 @@
 <body>
 <div class="phone">
   <div class="title">🌊 海物語 1/99.9</div>
-  <div class="prob">大当たり確率 1/99.9 ・ 1パチ ・ 自動転</div>
+  <div class="prob">大当たり確率 1/99.9 ・ 1パチ ・ 自動転＋リーチ演出</div>
 
   <div class="reels" id="reels">
     <div class="reel"><div class="strip" id="s0"></div></div>
@@ -63,21 +69,14 @@
     <div class="reel"><div class="strip" id="s2"></div></div>
   </div>
 
-  <div class="reach">
-    <h3>REACH 統計</h3>
-    <div class="row"><span>転数 (spins)</span><span id="rSpin">0</span></div>
-    <div class="row"><span>大当たり (hits)</span><span id="rHit" class="hit">0</span></div>
-    <div class="row"><span>実測確率</span><span id="rRate">—</span></div>
-    <div class="row"><span>理論 1/99.9</span><span id="rTheory">0.100%</span></div>
-    <div class="row"><span>偏差</span><span id="rDev">—</span></div>
-  </div>
+  <div class="info" id="info">準備中…</div>
+  <div class="stat" id="stat">転数 <b>0</b> ・ 大当たり <b>0</b> ・ 実測 <b>—</b></div>
 
-  <div class="info" id="info">自動転中…</div>
   <div class="ctrl">
     <button class="btn toggle" id="btnToggle">停止</button>
     <button class="btn reset" id="btnReset">リセット</button>
   </div>
-  <div class="credit">umi-monogatari · auto + reach demo</div>
+  <div class="credit">umi-monogatari · reach demo</div>
 </div>
 
 <script>
@@ -86,76 +85,100 @@ const CELL = 83.33, VIS = 3, PAD = 12;
 const HIT = Math.floor(Math.random()*SYMBOLS.length);
 const PROB = 1/99.9;
 
-let spinning = false, busy = false, auto = true;
+let busy = false, auto = true;
 let spins = 0, hits = 0;
-
 const strips = [document.getElementById("s0"),document.getElementById("s1"),document.getElementById("s2")];
 const reelsBox = document.getElementById("reels");
 const info = document.getElementById("info");
+const stat = document.getElementById("stat");
 const btnToggle = document.getElementById("btnToggle");
 
 function buildStrip(el, finalIdx){
-  const total = PAD*2 + 40;
+  const total = PAD*2 + 44;
   const arr = [];
   for (let i=0;i<total;i++) arr.push(SYMBOLS[(Math.random()*SYMBOLS.length)|0]);
   arr[PAD+1] = SYMBOLS[finalIdx];
   el.innerHTML = arr.map(s=>`<div class="cell">${s}</div>`).join("");
   return arr.length;
 }
-
-function updateReach(){
-  document.getElementById("rSpin").textContent = spins;
-  document.getElementById("rHit").textContent = hits;
-  if (spins>0){
-    const rate = hits/spins*100;
-    document.getElementById("rRate").textContent = rate.toFixed(3)+"%";
-    const dev = rate - PROB*100;
-    const d = document.getElementById("rDev");
-    d.textContent = (dev>=0?"+":"")+dev.toFixed(3)+"%";
-    d.style.color = dev>=0 ? "#6bff9e" : "#ff8a8a";
-  }
+function setStrip(el, lens, dur, delay){
+  const full = (lens-VIS)*CELL;
+  el.style.transition = "none";
+  el.style.transform = "translateY(0px)";
+  void el.offsetHeight;
+  el.style.transition = `transform ${dur}s cubic-bezier(.12,.8,.25,1) ${delay}s`;
+  el.style.transform = `translateY(-${full}px)`;
 }
 
+function updateStat(){
+  const rate = spins>0 ? (hits/spins*100).toFixed(3)+"%" : "—";
+  stat.innerHTML = `転数 <b>${spins}</b> ・ 大当たり <b>${hits}</b> ・ 実測 <b>${rate}</b>`;
+}
+
+// 自動転：一定確率で「リーチ」を作る（2列揃えて3列目が差し掛かり）
 function spinOnce(){
   if (busy) return;
   busy = true;
+  reelsBox.className = "reels";
+  info.className = "info"; info.textContent = "回転中…";
+
   const isWin = Math.random() < PROB;
-  const mid = isWin ? HIT : (Math.random()*SYMBOLS.length)|0;
-  const targets = isWin ? [HIT,HIT,HIT] : [(Math.random()*SYMBOLS.length)|0, mid, (Math.random()*SYMBOLS.length)|0];
-  const lens = strips.map((el,i)=> buildStrip(el, targets[i]));
+  // リーチ図柄：2列は同じにして、3列目で揃うか外れるか
+  const reachSym = (Math.random()*SYMBOLS.length)|0;
+  // 外れる用：3列目は reachSym と違う図柄に確定
+  let thirdSym;
+  do { thirdSym = (Math.random()*SYMBOLS.length)|0; } while (thirdSym === reachSym);
 
-  strips.forEach((el,i)=>{
-    const full = (lens[i]-VIS)*CELL;
-    el.style.transition = "none";
-    el.style.transform = "translateY(0px)";
-    void el.offsetHeight;
-    const dur = 1.6 + i*0.35;
-    el.style.transition = `transform ${dur}s cubic-bezier(.15,.85,.25,1)`;
-    el.style.transform = `translateY(-${full}px)`;
-  });
+  // 第1・2列：リーチ時は reachSym に揃える。非リーチ時はバラバラ
+  const col0 = isWin ? reachSym : (Math.random()*SYMBOLS.length)|0;
+  const col1 = isWin ? reachSym : (Math.random()*SYMBOLS.length)|0;
+  const col2 = isWin ? reachSym : thirdSym;
 
-  spins++;
-  if (isWin){ hits++; reelsBox.classList.add("win-glow"); info.innerHTML = "🎉 <b>大当たり！</b>"; }
-  else { reelsBox.classList.remove("win-glow"); info.textContent = "ハズレ"; }
-  updateReach();
+  const lens = strips.map((el,i)=> buildStrip(el, [col0,col1,col2][i]));
+  // 第1・2列は通常速度で止める
+  setStrip(strips[0], lens[0], 1.4, 0);
+  setStrip(strips[1], lens[1], 1.7, 0);
 
-  setTimeout(()=>{ busy = false; if (auto) spinOnce(); }, 1700 + 350);
+  // 第3列：リーチ演出付きでゆっくり止める
+  setTimeout(()=>{
+    if (isWin || (!isWin && Math.random() < 0.55)){
+      // リーチ表示（2列揃ってる状態）→ ハラハラ
+      reelsBox.classList.add("reach");
+      info.className = "info reach-txt";
+      info.textContent = "リーチ！！";
+    }
+  }, 1500);
+
+  // 第3列止め
+  setStrip(strips[2], lens[2], isWin ? 2.6 : 2.2, 1.5);
+
+  setTimeout(()=>{
+    spins++;
+    if (isWin){
+      hits++;
+      reelsBox.className = "reels win";
+      info.className = "info win-txt";
+      info.innerHTML = "🎉 大当たり！";
+    } else {
+      reelsBox.className = "reels";
+      info.className = "info miss-txt";
+      info.textContent = "ハズレ";
+    }
+    updateStat();
+    busy = false;
+    if (auto) spinOnce();
+  }, 1500 + 2600 + 150);
 }
 
-function startAuto(){ auto = true; btnToggle.textContent = "停止"; info.textContent = "自動転中…"; if(!busy) spinOnce(); }
+function startAuto(){ auto = true; btnToggle.textContent = "停止"; if(!busy) spinOnce(); }
 function stopAuto(){ auto = false; btnToggle.textContent = "開始"; }
-
 btnToggle.addEventListener("click", ()=> auto ? stopAuto() : startAuto());
 document.getElementById("btnReset").addEventListener("click", ()=>{
-  spins = 0; hits = 0; updateReach();
-  document.getElementById("rDev").textContent = "—";
-  document.getElementById("rDev").style.color = "#ffd479";
-  info.textContent = "リセット済";
+  spins = 0; hits = 0; updateStat(); info.textContent = "リセット済";
 });
 
-// init
 strips.forEach(el=>buildStrip(el,0));
-updateReach();
+updateStat();
 startAuto();
 </script>
 </body>
