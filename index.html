@@ -88,7 +88,6 @@
 
   <div class="ctrl">
     <button class="btn toggle" id="btnToggle">停止</button>
-    <button class="btn demo" id="btnDemo">当前演示:OFF</button>
     <button class="btn reset" id="btnReset">リセット</button>
   </div>
 
@@ -110,12 +109,8 @@
 const SYMBOLS = ["🐟","🐚","⭐","🌊","🐠","💎","🫧","🐙"];
 const CELL = 83.33, VIS = 3, PAD = 12;
 const PROB = 1/99.9;
-let demoMode = false; // 演示模式：1/10 概率
 let userDenominator = 99.9; // 用户自定义概率分母
-function currentProb(){
-  if (demoMode) return 1/10;
-  return 1/userDenominator;
-}
+function currentProb(){ return 1/userDenominator; }
 
 // 10种宝藏
 const TREASURES = [
@@ -295,23 +290,12 @@ function stopAuto(){ auto = false; btnToggle.textContent = "開始"; }
 btnToggle.addEventListener("click", ()=> auto ? stopAuto() : startAuto());
 function updateProbLabel(){
   const p = document.getElementById("prob");
-  p.textContent = demoMode
-    ? "演示モード 大当たり確率 1/10"
-    : `大当たり確率 1/${userDenominator} ・ 1パチ ・ 自動転＋自然リーチ＋宝箱`;
+  p.textContent = `大当たり確率 1/${userDenominator} ・ 1パチ ・ 自動転＋自然リーチ＋宝箱`;
 }
-document.getElementById("btnDemo").addEventListener("click", ()=>{
-  demoMode = !demoMode;
-  const b = document.getElementById("btnDemo");
-  b.textContent = "当前演示:"+(demoMode?"ON":"OFF");
-  updateProbLabel();
-});
 document.getElementById("btnApply").addEventListener("click", ()=>{
   const v = parseFloat(document.getElementById("probInput").value);
   if (!isNaN(v) && v >= 1 && v <= 10000){
     userDenominator = v;
-    demoMode = false; // 自定义概率时退出演示模式
-    const b = document.getElementById("btnDemo");
-    b.textContent = "当前演示:OFF";
     updateProbLabel();
     info.textContent = `確率 1/${v} に変更`;
   } else {
