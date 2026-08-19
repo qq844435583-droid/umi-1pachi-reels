@@ -214,15 +214,23 @@ function spinOnce(){
         const actualC = getCenter(strips[2]);
         const twoSame = (actualA === actualB);
         if (twoSame && actualC !== actualA){
-          // ★ 自然リーチ：画面で前2列が実際に同じ → 第3列を「途中からゆっくり」停める（3.5s 極遅easeOut）
+          // ★ 自然リーチ：画面で前2列が実際に同じ
           reelsBox.classList.add("reach");
           info.className = "info reach-txt"; info.textContent = "リーチ！！";
-          // 現在位置（進行中）から目標位置へ、3.5s かけて極めてゆっくり減速停止
-          // ※ transition を none にしない（跳びを防ぐ）：現在の計算値から新ターゲットへ滑らかに移行
-          const stopY = -(PAD)*CELL;
-          el3.style.transition = `transform 3.5s cubic-bezier(.05,.7,.1,1)`;
-          el3.style.transform = `translateY(${stopY}px)`;
-          // 総リーチ時間：1.8 + 3.5 = 5.3s
+          // 第3列：① 高速でもう2周分まわる（1.2s linear）→ ② ゆっくり減速して停止（3.5s）
+          const stopY = -(PAD)*CELL;                              // 最終停止位置（中段=目標図柄）
+          const twoRoundsY = stopY - 2*SYMBOLS.length*CELL;       // 2周分下の位置
+          // ① 現在位置から2周下へ高速移動（「まだ回ってる」感）
+          el3.style.transition = `transform 1.2s linear`;
+          el3.style.transform = `translateY(${twoRoundsY}px)`;
+          // ② 1.2s後：2周下から最終位置へ極めてゆっくり戻す（減速停止・どんでん返し）
+          setTimeout(()=>{
+            try {
+              el3.style.transition = `transform 3.5s cubic-bezier(.05,.7,.1,1)`;
+              el3.style.transform = `translateY(${stopY}px)`;
+            } catch(e){}
+          }, 1200);
+          // 総リーチ時間：1.8 + 1.2 + 3.5 = 6.5s
           setTimeout(()=>{
             try {
               spins++; reachCount++;
@@ -238,7 +246,7 @@ function spinOnce(){
               }
               updateStat();
             } finally { busy=false; if(auto) spinOnce(); }
-          }, 3500);
+          }, 4700);
         } else {
           // 非リーチ：第3列は3sで止まる → 残り1.2s待って確定
           setTimeout(()=>{
