@@ -169,53 +169,52 @@ function updateStat(){
 function spinOnce(){
   if (busy) return;
   busy = true;
-  reelsBox.className = "reels";
-  info.className = "info"; info.textContent = "回転中…";
+  try {
+    reelsBox.className = "reels";
+    info.className = "info"; info.textContent = "回転中…";
 
-  const idx = [(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0];
-  const lens = strips.map((el,i)=> buildStrip(el, idx[i]));
+    const idx = [(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0,(Math.random()*SYMBOLS.length)|0];
+    const lens = strips.map((el,i)=> buildStrip(el, idx[i]));
 
-  // 第1・2列：通常速度
-  setStrip(strips[0], lens[0], 1.4);
-  setStrip(strips[1], lens[1], 1.7);
+    // 第1・2列：通常速度で先に止める（1.4s / 1.7s）
+    setStrip(strips[0], lens[0], 1.4);
+    setStrip(strips[1], lens[1], 1.7);
+    // 第3列：2.8s かけてゆっくり止まる（前2列が止まった後も回り続ける）
+    setStrip(strips[2], lens[2], 2.8);
 
-  // 第3列：先通常転、1.6s 後中段を読んで判定
-  setStrip(strips[2], lens[2], 1.6);
-
-  setTimeout(()=>{
-    const c0 = getCenter(strips[0]);
-    const c1 = getCenter(strips[1]);
-    const c2 = getCenter(strips[2]);
-    const twoSame = (c0 === c1);
-
-    if (twoSame && c2 !== c0){
-      // 自然リーチ：2同+第3異。第3列をゆっくり再転→止める
-      reelsBox.classList.add("reach");
-      info.className = "info reach-txt"; info.textContent = "リーチ！！";
-      // 再構築して同じ c0/c1 を維持、c2 はそのまま（異なる）でゆっくり停止
-      const l2 = buildStrip(strips[2], SYMBOLS.indexOf(c2));
-      setStrip(strips[2], l2, 2.2);
-      setTimeout(()=>{
-        spins++; reachCount++;
-        const cc2 = getCenter(strips[2]);
-        if (cc2 === c0){
-          hits++; grantTreasure(); reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
-        } else {
-          reelsBox.className="reels"; info.className="info miss-txt"; info.textContent="ハズレ";
+    // 1.8s 時点：前2列は停止済み。第3列はまだ回転中。
+    setTimeout(()=>{
+      try {
+        const [a,b,c] = idx;
+        const twoSame = (a === b);
+        if (twoSame && c !== a){
+          // ★ 自然リーチ：2列同じ・第3列まだ回転 → リーチ演出表示（第3列はそのまま2.8sで止まる）
+          reelsBox.classList.add("reach");
+          info.className = "info reach-txt"; info.textContent = "リーチ！！";
         }
-        updateStat(); busy=false; if(auto) spinOnce();
-      }, 2200+100);
-    } else {
-      // 非リーチ：すでに第3列止まってる → 確定
-      spins++;
-      if (c0===c1 && c1===c2){
-        hits++; grantTreasure(); reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
-      } else {
-        reelsBox.className="reels"; info.className="info miss-txt"; info.textContent="ハズレ";
+        // 2.9s 時点：第3列も止まった → 確定
+        setTimeout(()=>{
+          try {
+            spins++;
+            if (twoSame && c !== a) reachCount++;
+            if (a===b && b===c){
+              hits++; grantTreasure();
+              reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
+            } else {
+              reelsBox.className="reels"; info.className="info miss-txt"; info.textContent="ハズレ";
+            }
+            updateStat();
+          } finally { busy=false; if(auto) spinOnce(); }
+        }, 1100);
+      } catch(e){
+        console.error("spinOnce inner error:", e);
+        busy=false;
       }
-      updateStat(); busy=false; if(auto) spinOnce();
-    }
-  }, 1650);
+    }, 1800);
+  } catch(e){
+    console.error("spinOnce error:", e);
+    busy=false;
+  }
 }
 
 function startAuto(){ auto = true; btnToggle.textContent = "停止"; if(!busy) spinOnce(); }
