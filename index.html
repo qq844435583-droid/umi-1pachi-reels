@@ -17,7 +17,6 @@
     display: flex; flex-direction: column; align-items: center; padding: 16px; position: relative; }
   .title { font-size: 15px; letter-spacing: 2px; color: #7fdbff; text-shadow: 0 0 8px #2e9fe0; margin-bottom: 2px; }
   .prob { font-size: 12px; color: #ffd479; margin-bottom: 12px; }
-
   .reels { display: flex; gap: 10px; background: linear-gradient(180deg, #06121d, #0a1f30);
     border: 3px solid #1b4f72; border-radius: 16px; padding: 14px 12px;
     box-shadow: 0 0 24px rgba(46,159,224,.35), inset 0 0 18px rgba(0,0,0,.6); position: relative; }
@@ -29,27 +28,20 @@
   .reel::after { content: ""; position: absolute; top: 83.33px; left: 0; right: 0; height: 83.33px;
     border-top: 2px solid rgba(255,212,121,.5); border-bottom: 2px solid rgba(255,212,121,.5);
     background: rgba(255,212,121,.08); pointer-events: none; }
-
-  /* リーチ状態：中段図柄を橙色に光らせる */
-  .reels.reach .reel::after { border-color: #ff9f43; background: rgba(255,159,67,.18);
-    box-shadow: 0 0 18px rgba(255,159,67,.6); }
+  /* リーチ：中段橙色脉冲 + 轻微抖动 */
+  .reels.reach .reel::after { border-color: #ff9f43; background: rgba(255,159,67,.18); box-shadow: 0 0 18px rgba(255,159,67,.6); }
   .reels.reach { animation: shake .12s linear infinite; }
   @keyframes shake { 0%{transform:translate(0,0)} 25%{transform:translate(-1.5px,1px)} 50%{transform:translate(1.5px,-1px)} 75%{transform:translate(-1px,-1px)} 100%{transform:translate(1px,1px)} }
-
   /* 大当たり */
-  .reels.win { animation: none; box-shadow: 0 0 50px rgba(255,212,121,.95), inset 0 0 18px rgba(0,0,0,.6); }
+  .reels.win { animation: winglow .4s ease-in-out infinite alternate; }
   .reels.win .reel::after { border-color: #ffe28a; background: rgba(255,212,121,.3); }
   @keyframes winglow { from{box-shadow:0 0 30px rgba(255,212,121,.6)} to{box-shadow:0 0 60px rgba(255,212,121,1)} }
-  .reels.win { animation: winglow .4s ease-in-out infinite alternate; }
-
   .info { margin-top: 14px; text-align: center; font-size: 15px; font-weight: 700; min-height: 22px; letter-spacing: 1px; }
   .info.reach-txt { color: #ff9f43; text-shadow: 0 0 10px rgba(255,159,67,.7); }
   .info.win-txt { color: #ffe28a; text-shadow: 0 0 12px rgba(255,212,121,.9); }
   .info.miss-txt { color: #6f9fc0; }
-
   .stat { margin-top: 12px; font-size: 12px; color: #bfe3ff; }
   .stat b { color: #ffd479; }
-
   .ctrl { margin-top: 14px; display: flex; gap: 10px; }
   .btn { width: 110px; height: 46px; border: none; border-radius: 24px; font-size: 15px; font-weight: 700; letter-spacing: 1px; cursor: pointer; }
   .btn.toggle { background: linear-gradient(180deg,#ffd479,#ff9f43); color: #5a2e00; box-shadow: 0 4px 12px rgba(255,159,67,.5); }
@@ -61,32 +53,25 @@
 <body>
 <div class="phone">
   <div class="title">🌊 海物語 1/99.9</div>
-  <div class="prob">大当たり確率 1/99.9 ・ 1パチ ・ 自動転＋リーチ演出</div>
-
+  <div class="prob">大当たり確率 1/99.9 ・ 1パチ ・ 自動転＋自然リーチ</div>
   <div class="reels" id="reels">
     <div class="reel"><div class="strip" id="s0"></div></div>
     <div class="reel"><div class="strip" id="s1"></div></div>
     <div class="reel"><div class="strip" id="s2"></div></div>
   </div>
-
   <div class="info" id="info">準備中…</div>
-  <div class="stat" id="stat">転数 <b>0</b> ・ 大当たり <b>0</b> ・ 実測 <b>—</b></div>
-
+  <div class="stat" id="stat">転数 <b>0</b> ・ 大当たり <b>0</b> ・ リーチ <b>0</b> ・ 実測 <b>—</b></div>
   <div class="ctrl">
     <button class="btn toggle" id="btnToggle">停止</button>
     <button class="btn reset" id="btnReset">リセット</button>
   </div>
-  <div class="credit">umi-monogatari · reach demo</div>
+  <div class="credit">umi-monogatari · natural reach demo</div>
 </div>
-
 <script>
 const SYMBOLS = ["🐟","🐚","⭐","🌊","🐠","💎","🫧","🐙"];
 const CELL = 83.33, VIS = 3, PAD = 12;
-const HIT = Math.floor(Math.random()*SYMBOLS.length);
 const PROB = 1/99.9;
-
-let busy = false, auto = true;
-let spins = 0, hits = 0;
+let busy = false, auto = true, spins = 0, hits = 0, reachCount = 0;
 const strips = [document.getElementById("s0"),document.getElementById("s1"),document.getElementById("s2")];
 const reelsBox = document.getElementById("reels");
 const info = document.getElementById("info");
@@ -109,74 +94,70 @@ function setStrip(el, lens, dur, delay){
   el.style.transition = `transform ${dur}s cubic-bezier(.12,.8,.25,1) ${delay}s`;
   el.style.transform = `translateY(-${full}px)`;
 }
-
 function updateStat(){
   const rate = spins>0 ? (hits/spins*100).toFixed(3)+"%" : "—";
-  stat.innerHTML = `転数 <b>${spins}</b> ・ 大当たり <b>${hits}</b> ・ 実測 <b>${rate}</b>`;
+  stat.innerHTML = `転数 <b>${spins}</b> ・ 大当たり <b>${hits}</b> ・ リーチ <b>${reachCount}</b> ・ 実測 <b>${rate}</b>`;
 }
 
-// 自動転：一定確率で「リーチ」を作る（2列揃えて3列目が差し掛かり）
 function spinOnce(){
   if (busy) return;
   busy = true;
   reelsBox.className = "reels";
   info.className = "info"; info.textContent = "回転中…";
 
-  const isWin = Math.random() < PROB;
-  // リーチ図柄：2列は同じにして、3列目で揃うか外れるか
-  const reachSym = (Math.random()*SYMBOLS.length)|0;
-  // 外れる用：3列目は reachSym と違う図柄に確定
-  let thirdSym;
-  do { thirdSym = (Math.random()*SYMBOLS.length)|0; } while (thirdSym === reachSym);
+  // 三列それぞれ純ランダムで決定（强制的な揃えはしない）
+  const idx = [
+    (Math.random()*SYMBOLS.length)|0,
+    (Math.random()*SYMBOLS.length)|0,
+    (Math.random()*SYMBOLS.length)|0
+  ];
+  const lens = strips.map((el,i)=> buildStrip(el, idx[i]));
 
-  // 第1・2列：リーチ時は reachSym に揃える。非リーチ時はバラバラ
-  const col0 = isWin ? reachSym : (Math.random()*SYMBOLS.length)|0;
-  const col1 = isWin ? reachSym : (Math.random()*SYMBOLS.length)|0;
-  const col2 = isWin ? reachSym : thirdSym;
-
-  const lens = strips.map((el,i)=> buildStrip(el, [col0,col1,col2][i]));
-  // 第1・2列は通常速度で止める
+  // 第1・2列：通常速度で止める
   setStrip(strips[0], lens[0], 1.4, 0);
   setStrip(strips[1], lens[1], 1.7, 0);
 
-  // 第3列：リーチ演出付きでゆっくり止める
+  // 第3列が止まる直前（1.6s後）に、第1=第2 か判定
   setTimeout(()=>{
-    if (isWin || (!isWin && Math.random() < 0.55)){
-      // リーチ表示（2列揃ってる状態）→ ハラハラ
+    const twoSame = (idx[0] === idx[1]);
+    if (twoSame && idx[2] !== idx[0]){
+      // 自然リーチ：2同+第3異。第3列をゆっくり止めて演出
       reelsBox.classList.add("reach");
       info.className = "info reach-txt";
       info.textContent = "リーチ！！";
-    }
-  }, 1500);
-
-  // 第3列止め
-  setStrip(strips[2], lens[2], isWin ? 2.6 : 2.2, 1.5);
-
-  setTimeout(()=>{
-    spins++;
-    if (isWin){
-      hits++;
-      reelsBox.className = "reels win";
-      info.className = "info win-txt";
-      info.innerHTML = "🎉 大当たり！";
+      setStrip(strips[2], lens[2], 2.4, 0);
+      // 少し待ってから確定
+      setTimeout(()=>{
+        spins++; reachCount++;
+        if (idx[2] === idx[0]){ // この時点で揃った（実質大当たり）
+          hits++; reelsBox.className = "reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
+        } else {
+          reelsBox.className = "reels"; info.className="info miss-txt"; info.textContent="ハズレ";
+        }
+        updateStat(); busy=false; if(auto) spinOnce();
+      }, 2400+120);
     } else {
-      reelsBox.className = "reels";
-      info.className = "info miss-txt";
-      info.textContent = "ハズレ";
+      // 非リーチ：第3列通常停止、すぐ確定
+      setStrip(strips[2], lens[2], 1.9, 0);
+      setTimeout(()=>{
+        spins++;
+        if (idx[0]===idx[1] && idx[1]===idx[2]){ // 三列全同 = 大当たり（1/99.9 相当）
+          hits++; reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
+        } else {
+          reelsBox.className="reels"; info.className="info miss-txt"; info.textContent="ハズレ";
+        }
+        updateStat(); busy=false; if(auto) spinOnce();
+      }, 1900+150);
     }
-    updateStat();
-    busy = false;
-    if (auto) spinOnce();
-  }, 1500 + 2600 + 150);
+  }, 1600);
 }
 
 function startAuto(){ auto = true; btnToggle.textContent = "停止"; if(!busy) spinOnce(); }
 function stopAuto(){ auto = false; btnToggle.textContent = "開始"; }
 btnToggle.addEventListener("click", ()=> auto ? stopAuto() : startAuto());
 document.getElementById("btnReset").addEventListener("click", ()=>{
-  spins = 0; hits = 0; updateStat(); info.textContent = "リセット済";
+  spins=0; hits=0; reachCount=0; updateStat(); info.textContent="リセット済";
 });
-
 strips.forEach(el=>buildStrip(el,0));
 updateStat();
 startAuto();
