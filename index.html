@@ -1,7 +1,9 @@
+<!-- VERSION: v1.3.0-20260820-1200 | 按游戏画面动态调节BGM与Reach语音 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="version" content="v1.3.0-20260820-1200">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>海物語 1/99.9 リーチ図柄＋宝箱</title>
 <style>
@@ -35,8 +37,8 @@
   .reels.win .reel::after { border-color: #ffe28a; background: rgba(255,212,121,.3); }
   @keyframes winglow { from{box-shadow:0 0 30px rgba(255,212,121,.6)} to{box-shadow:0 0 60px rgba(255,212,121,1)} }
 
-  /* 大当たり：画面全体が最も強く震える */
-  body.win-shake { animation: bigshake .08s linear infinite; }
+  /* 大当たり：短暂抖动0.6s（中奖时） */
+  body.win-shake { animation: bigshake .08s linear 7; }
   @keyframes bigshake {
     0%{transform:translate(0,0)} 20%{transform:translate(-6px,5px)} 40%{transform:translate(6px,-5px)}
     60%{transform:translate(-5px,-4px)} 80%{transform:translate(5px,4px)} 100%{transform:translate(-2px,2px)}
@@ -92,6 +94,8 @@
   .item .cnt { position: absolute; top: 3px; right: 4px; font-size: 10px; font-weight: 700; color: #6bff9e; background: rgba(0,0,0,.5); border-radius: 8px; padding: 0 4px; }
   .item .owned { position: absolute; bottom: 3px; font-size: 9px; color: #6bff9e; }
   .credit { margin-top: 14px; font-size: 11px; color: #4a7ba3; text-align: center; }
+  .version { margin-top: 6px; font-size: 10px; color: #5a7a9a; letter-spacing: 1px; text-align: center; }
+  .version b { color: #7fdbff; font-weight: 700; }
 
   /* 神龙图鉴 */
   .dragon-panel { width: 100%; max-width: 390px; margin-top: 14px;
@@ -113,6 +117,8 @@
 </head>
 <body>
 <div class="phone">
+  <audio id="bgmAudio" src="umi-bgm.mp3" loop preload="auto"></audio>
+  <audio id="reachAudio" src="reach-voice.mp3" preload="auto"></audio>
   <div class="title">🌊 海物語 1/99.9</div>
   <div class="prob" id="prob">大当たり確率 1/99.9 ・ 1パチ ・ 自動転＋自然リーチ＋宝箱</div>
 
@@ -147,6 +153,7 @@
   </div>
 
   <div class="credit">umi-monogatari · reach + treasure + dragon demo</div>
+  <div class="version" id="version"></div>
 </div>
 
 <!-- 中奖弹窗 -->
@@ -172,6 +179,45 @@
 </div>
 
 <script>
+const VERSION = "v1.3.0-20260820-1200"; // 每次修改必递增，否则视为未更新
+const bgmAudio = document.getElementById("bgmAudio");
+const reachAudio = document.getElementById("reachAudio");
+let audioUnlocked = false;
+let reachVoiceTimer = null;
+
+function fadeAudio(audio, target, duration=280){
+  const start = audio.volume;
+  const started = performance.now();
+  function step(now){
+    const progress = Math.min(1, (now-started)/duration);
+    audio.volume = start + (target-start)*progress;
+    if(progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function unlockAudio(){
+  audioUnlocked = true;
+}
+function setAudioMode(mode){
+  if(!audioUnlocked) return;
+  if(mode === "spin"){
+    fadeAudio(bgmAudio, 0.22);
+    bgmAudio.play().catch(()=>{});
+  } else if(mode === "reach"){
+    fadeAudio(bgmAudio, 0.06);
+    clearTimeout(reachVoiceTimer);
+    reachAudio.pause();
+    reachAudio.currentTime = 0;
+    reachAudio.volume = 0.9;
+    reachAudio.play().catch(()=>{});
+    reachVoiceTimer = setTimeout(()=>reachAudio.pause(), 4200);
+  } else {
+    fadeAudio(bgmAudio, 0);
+    setTimeout(()=>{ if(mode === "idle" || mode === "win") bgmAudio.pause(); }, 320);
+    reachAudio.pause();
+  }
+}
+document.addEventListener("pointerdown", unlockAudio, {once:true});
 const SYMBOLS = ["🐟","🐚","⭐","🌊","🐠","💎","🫧","🐙"];
 const CELL = 83.33, VIS = 3, PAD = 12;
 const PROB = 1/99.9;
@@ -249,9 +295,16 @@ function lightDragon(){
 function checkAllTreasures(){
   return owned.every(x=>x>0);
 }
-function showDragonModal(idx){
-  // 神龙召唤弹窗（道具全收集惊喜）
+function triggerShortShake(){
+  document.body.classList.remove("win-shake");
+  void document.body.offsetWidth;
   document.body.classList.add("win-shake");
+  setTimeout(()=> document.body.classList.remove("win-shake"), 650);
+}
+function showDragonModal(idx){
+  // 神龙召唤弹窗（短暂抖动0.6s）
+  setAudioMode("win");
+  triggerShortShake();
   auto = false;
   document.getElementById("btnToggle").textContent = "開始";
   document.getElementById("dIco").textContent = DRAGONS[idx].ico;
@@ -266,8 +319,9 @@ function grantTreasure(){
   return i; // 返回掉落道具索引
 }
 function showWinModal(i){
-  // 屏幕最强震动 + 暂停 + 弹窗
-  document.body.classList.add("win-shake");
+  // 短暂抖动0.6s + 暂停 + 弹窗
+  setAudioMode("win");
+  triggerShortShake();
   auto = false;
   const b = document.getElementById("btnToggle");
   b.textContent = "開始";
@@ -310,6 +364,7 @@ function updateStat(){
 function spinOnce(){
   if (busy) return;
   busy = true;
+  setAudioMode("spin");
   try {
     reelsBox.className = "reels";
     info.className = "info"; info.textContent = "回転中…";
@@ -318,8 +373,10 @@ function spinOnce(){
     const isWin = (Math.random() < currentProb());
     let idx;
     if (isWin){
+      // 中奖也走 reach 演出：先让第3列假符号，reach 时换真符号
       const s = (Math.random()*SYMBOLS.length)|0;
-      idx = [s,s,s]; // 强制三同 → 中奖
+      let t; do { t = (Math.random()*SYMBOLS.length)|0; } while (t === s);
+      idx = [s, s, t]; // 先制造 reach 假象
     } else {
       // 非中奖时：20% 概率制造"两同+第三异"（リーチ演出）→ 总リーチ率≈20%
       if (Math.random() < 0.2){
@@ -350,7 +407,11 @@ function spinOnce(){
         if (twoSame && c !== a){
           // ★ 自然リーチ：画面で前2列が実際に同じ
           reelsBox.classList.add("reach");
+          setAudioMode("reach");
           info.className = "info reach-txt"; info.textContent = "リーチ！！";
+          // 如果是中奖，把第3列的最终符号改成匹配的
+          const isActuallyWin = (a === c); // 之前不会是真中奖，因为 c !== a
+          // 实际上 isWin 在外面定了，用外面的 isWin 判断
           // 第3列：① 高速でもう2周分まわる（1.2s linear）→ ② ゆっくり減速して停止（3.5s）
           const stopY = -(PAD)*CELL;                              // 最終停止位置（中段=目標図柄）
           const twoRoundsY = stopY - 2*SYMBOLS.length*CELL;       // 2周分下の位置
@@ -360,69 +421,69 @@ function spinOnce(){
           // ② 1.2s後：2周下から最終位置へ極めてゆっくり戻す（減速停止・どんでん返し）
           setTimeout(()=>{
             try {
+              // 如果是中奖，重写第3列的中间格子为匹配符号
+              if (isWin) {
+                const cells = el3.querySelectorAll(".cell");
+                if (cells[PAD+1]) cells[PAD+1].textContent = SYMBOLS[a];
+              }
               el3.style.transition = `transform 3.5s cubic-bezier(.05,.7,.1,1)`;
               el3.style.transform = `translateY(${stopY}px)`;
             } catch(e){}
           }, 1200);
           // 総リーチ時間：1.8 + 1.2 + 3.5 = 6.5s
           setTimeout(()=>{
-            try {
-              spins++; reachCount++;
-              // 最終表示で三同なら大当たり（実際の表示に基づく）
-              const fA = getCenter(strips[0]);
-              const fB = getCenter(strips[1]);
-              const fC = getCenter(strips[2]);
-              if (fA===fB && fB===fC){
-                hits++;
-                const ti = grantTreasure();
-                reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
-                updateStat();
-                // 每次大当たり必点亮一种神龙
-                const di = lightDragon();
-                // 道具全收集 → 召唤神龙惊喜（首次）
-                if (checkAllTreasures() && !dragonSummoned){
-                  dragonSummoned = true;
-                  showDragonModal(di);
-                } else {
-                  showWinModal(ti);   // 震动+暂停+弹窗（中奖后不自动继续）
-                }
+            spins++; reachCount++;
+            const fA = getCenter(strips[0]);
+            const fB = getCenter(strips[1]);
+            const fC = getCenter(strips[2]);
+            if (fA===fB && fB===fC){
+              hits++;
+              const ti = grantTreasure();
+              reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
+              updateStat();
+              const di = lightDragon();
+              if (checkAllTreasures() && !dragonSummoned){
+                dragonSummoned = true;
+                showDragonModal(di);
               } else {
-                reelsBox.className="reels"; info.className="info miss-txt"; info.textContent="ハズレ";
-                updateStat();
-                busy=false; if(auto) spinOnce();
+                showWinModal(ti);
               }
-            } finally { busy=false; if(auto) spinOnce(); }
+            } else {
+              reelsBox.className="reels"; info.className="info miss-txt"; info.textContent="ハズレ";
+              setAudioMode("spin");
+              updateStat();
+            }
+            busy = false;
+            if(auto) spinOnce();
           }, 4700);
-        } else {
-          // 非リーチ：第3列は3sで止まる → 残り1.2s待って確定
-          setTimeout(()=>{
-            try {
-              spins++;
-              const fA = getCenter(strips[0]);
-              const fB = getCenter(strips[1]);
-              const fC = getCenter(strips[2]);
-              if (fA===fB && fB===fC){
-                hits++;
-                const ti = grantTreasure();
-                reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
-                updateStat();
-                // 每次大当たり必点亮一种神龙
-                const di = lightDragon();
-                // 道具全收集 → 召唤神龙惊喜（首次）
-                if (checkAllTreasures() && !dragonSummoned){
-                  dragonSummoned = true;
-                  showDragonModal(di);
+            } else {
+              // 非リーチ：第3列は3sで止まる → 残り1.2s待って確定
+              setTimeout(()=>{
+                spins++;
+                const fA = getCenter(strips[0]);
+                const fB = getCenter(strips[1]);
+                const fC = getCenter(strips[2]);
+                if (fA===fB && fB===fC){
+                  hits++;
+                  const ti = grantTreasure();
+                  reelsBox.className="reels win"; info.className="info win-txt"; info.innerHTML="🎉 大当たり！";
+                  updateStat();
+                  const di = lightDragon();
+                  if (checkAllTreasures() && !dragonSummoned){
+                    dragonSummoned = true;
+                    showDragonModal(di);
+                  } else {
+                    showWinModal(ti);
+                  }
                 } else {
-                  showWinModal(ti);   // 震动+暂停+弹窗（中奖后不自动继续）
+                  reelsBox.className="reels"; info.className="info miss-txt"; info.textContent="ハズレ";
+                  setAudioMode("spin");
+                  updateStat();
                 }
-              } else {
-                reelsBox.className="reels"; info.className="info miss-txt"; info.textContent="ハズレ";
-                updateStat();
-                busy=false; if(auto) spinOnce();
-              }
-            } finally { busy=false; if(auto) spinOnce(); }
-          }, 1200);
-        }
+                busy = false;
+                if(auto) spinOnce();
+              }, 1200);
+            }
       } catch(e){
         console.error("spinOnce inner error:", e);
         busy=false;
@@ -434,8 +495,17 @@ function spinOnce(){
   }
 }
 
-function startAuto(){ auto = true; btnToggle.textContent = "停止"; if(!busy) spinOnce(); }
-function stopAuto(){ auto = false; btnToggle.textContent = "開始"; }
+function startAuto(){
+  auto = true;
+  btnToggle.textContent = "停止";
+  setAudioMode("spin");
+  if(!busy) spinOnce();
+}
+function stopAuto(){
+  auto = false;
+  btnToggle.textContent = "開始";
+  if(!busy) setAudioMode("idle");
+}
 btnToggle.addEventListener("click", ()=> auto ? stopAuto() : startAuto());
 function updateProbLabel(){
   const p = document.getElementById("prob");
@@ -452,24 +522,27 @@ document.getElementById("btnApply").addEventListener("click", ()=>{
   }
 });
 document.getElementById("btnReset").addEventListener("click", ()=>{
+  setAudioMode("idle");
   spins=0; hits=0; reachCount=0; owned = new Array(10).fill(0);
   dragonLit = new Array(5).fill(false); dragonSummoned = false;
   buildGrid(); buildDragonGrid(); updateStat(); info.textContent="リセット済";
 });
-// 弹窗"続ける"：关闭弹窗、停止震动、自动恢复游戏
+// 弹窗"続ける"：关闭弹窗、自动恢复游戏（抖动已在0.6s后自动停止）
 document.getElementById("mBtn").addEventListener("click", ()=>{
   document.getElementById("winModal").classList.remove("show");
-  document.body.classList.remove("win-shake");
   startAuto();  // 自动继续
 });
-// 神龙弹窗"受け取る"：关闭、停止震动、恢复游戏
+// 神龙弹窗"受け取る"：关闭、恢复游戏
 document.getElementById("dBtn").addEventListener("click", ()=>{
   document.getElementById("dragonModal").classList.remove("show");
-  document.body.classList.remove("win-shake");
   startAuto();
 });
 
-buildGrid(); buildDragonGrid(); updateStat(); updateProbLabel(); startAuto();
+function renderVersion(){
+  const el = document.getElementById("version");
+  if(el) el.innerHTML = `<b>${VERSION}</b> · Last-Modified: ${document.lastModified}`;
+}
+buildGrid(); buildDragonGrid(); updateStat(); updateProbLabel(); renderVersion(); startAuto();
 </script>
 </body>
 </html>
